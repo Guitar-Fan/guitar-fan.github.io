@@ -1,0 +1,134 @@
+body {
+    position: relative; /* Position relative to allow positioning of overlay */
+    background-color: #1c1e22; /* Darker background for a modern look */
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Full height for the body */
+    color: white;
+    margin: 0;
+}
+
+body::before {
+    content: ""; /* Necessary for the pseudo-element */
+    position: absolute; /* Position absolute to cover the body */
+    top: 0; /* Align to the top */
+    left: 0; /* Align to the left */
+    right: 0; /* Stretch to the right */
+    bottom: 0; /* Stretch to the bottom */
+    background-image: url('ChessBackground.webp'); /* Same background image */
+    background-size: cover; /* Ensure the background covers the entire viewport */
+    background-position: center; /* Center the background image */
+    z-index: 0; /* Ensure the background image is behind everything */
+}
+
+body::after {
+    content: ""; /* Necessary for the pseudo-element */
+    position: absolute; /* Position absolute to cover the body */
+    top: 0; /* Align to the top */
+    left: 0; /* Align to the left */
+    right: 0; /* Stretch to the right */
+    bottom: 0; /* Stretch to the bottom */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+    z-index: 1; /* Ensure the overlay is above the background image */
+}
+
+.setup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #2e3338; /* Light dark background for the setup */
+    padding: 20px; /* Padding for spacing */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+    position: relative; /* Ensure setup is above overlay */
+    z-index: 2; /* Position above the overlay */
+}
+
+label {
+    margin: 10px 0; /* More spacing for labels */
+    font-size: 18px; /* Increased font size for readability */
+}
+
+input {
+    margin: 5px 0;
+    padding: 10px; /* Increased padding for a bigger feel */
+    font-size: 20px; /* Font size for inputs */
+    width: 200px; /* Set width for consistency */
+    border: 2px solid #4CAF50; /* Green border for inputs */
+    border-radius: 5px; /* Rounded corners */
+}
+
+.chess-clock {
+    display: flex;
+    margin-top: 20px;
+    justify-content: center; /* Center the timers */
+    z-index: 2; /* Ensure the chess clock is above the overlay */
+}
+
+.hidden {
+    display: none;
+}
+
+#player1 {
+    background-color: #4CAF50; /* Green for White */
+}
+
+#player2 {
+    background-color: #757575; /* Dark grey for Black */
+}
+
+.timer {
+    width: 400px; /* Increased width for timer boxes */
+    height: 150px; /* Increased height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #333; /* Darker background for timer */
+    color: white;
+    font-size: 60px; /* Larger text size */
+    border-radius: 10px; /* Rounded corners */
+    margin: 10px; /* Space between timers */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+    position: relative; /* Ensure timer boxes are above the overlay */
+    z-index: 3; /* Make sure timers are above the overlay */
+}
+
+.active {
+    background-color: #4CAF50; /* Green background for the active player */
+}
+
+.controls {
+    margin-top: 20px;
+}
+
+button {
+    font-size: 20px;
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #4CAF50; /* Green background for buttons */
+    color: white; /* White text for buttons */
+    transition: background-color 0.3s; /* Smooth transition for hover */
+}
+
+button:focus {
+    outline: none;
+}
+
+button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+.result {
+    font-size: 36px; /* Increased font size for results */
+    margin-top: 20px;
+    display: none; /* Initially hidden */
+    color: #FFD700; /* Gold color for the winning message */
+    text-align: center; /* Center the text */
+    z-index: 2; /* Ensure result is above the overlay */
+}
