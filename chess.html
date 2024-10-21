@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -37,9 +37,10 @@
         }
         .piece {
             user-select: none;
+            cursor: grab;
         }
-        .selected {
-            outline: 2px solid red;
+        .dragging {
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -51,20 +52,14 @@
             R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔', P: '♙'
         };
 
-
         const initialBoard = [
             'rnbqkbnr', 'pppppppp', '        ', '        ',
             '        ', '        ', 'PPPPPPPP', 'RNBQKBNR'
         ];
 
-
         let board = initialBoard.map(row => row.split(''));
-        let selectedPiece = null;
-        let selectedSquare = null;
-
 
         const chessboard = document.getElementById('chessboard');
-
 
         function createBoard() {
             for (let row = 0; row < 8; row++) {
@@ -73,66 +68,65 @@
                     square.classList.add('square');
                     square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
                     square.id = `${row}-${col}`;
-                    square.addEventListener('click', () => onSquareClick(row, col));
+                    square.addEventListener('drop', onDrop);
+                    square.addEventListener('dragover', onDragOver);
                     chessboard.appendChild(square);
                 }
             }
             renderBoard();
         }
 
-
         function renderBoard() {
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     const square = document.getElementById(`${row}-${col}`);
-                    square.innerHTML = board[row][col] === ' ' ? '' : `<span class="piece">${pieces[board[row][col]]}</span>`;
+                    square.innerHTML = board[row][col] === ' ' ? '' : `<span class="piece" draggable="true" id="piece-${row}-${col}">${pieces[board[row][col]]}</span>`;
                 }
             }
+            addDragEvents();
         }
 
-
-        function onSquareClick(row, col) {
-            if (selectedPiece) {
-                movePiece(row, col);
-            } else {
-                selectPiece(row, col);
-            }
+        function addDragEvents() {
+            const pieces = document.querySelectorAll('.piece');
+            pieces.forEach(piece => {
+                piece.addEventListener('dragstart', onDragStart);
+                piece.addEventListener('dragend', onDragEnd);
+            });
         }
 
+        let draggedPiece;
 
-        function selectPiece(row, col) {
-            if (board[row][col] !== ' ') {
-                selectedPiece = { row, col, piece: board[row][col] };
-                selectedSquare = document.getElementById(`${row}-${col}`);
-                selectedSquare.classList.add('selected');
-            }
+        function onDragStart(event) {
+            draggedPiece = event.target;
+            draggedPiece.classList.add('dragging');
+            setTimeout(() => {
+                draggedPiece.style.display = 'none';
+            }, 0);
         }
 
+        function onDragEnd(event) {
+            draggedPiece.classList.remove('dragging');
+            draggedPiece.style.display = 'block';
+            draggedPiece = null;
+        }
 
-        function movePiece(row, col) {
-            if (selectedPiece && isValidMove(selectedPiece.row, selectedPiece.col, row, col)) {
-                board[row][col] = selectedPiece.piece;
-                board[selectedPiece.row][selectedPiece.col] = ' ';
+        function onDrop(event) {
+            event.preventDefault();
+            const targetSquare = event.target.closest('.square');
+            if (targetSquare && draggedPiece) {
+                const [startRow, startCol] = draggedPiece.id.split('-').slice(1);
+                const [endRow, endCol] = targetSquare.id.split('-');
+                
+                board[endRow][endCol] = board[startRow][startCol];
+                board[startRow][startCol] = ' ';
+                
                 renderBoard();
-                selectedSquare.classList.remove('selected');
-                selectedPiece = null;
-                selectedSquare = null;
             }
         }
 
-
-        function isValidMove(fromRow, fromCol, toRow, toCol) {
-            // Basic validation for moving to an empty square or capturing an opponent's piece
-            const piece = board[fromRow][fromCol];
-            const targetPiece = board[toRow][toCol];
-            return targetPiece === ' ' || isOpponentPiece(piece, targetPiece);
+        function onDragOver(event) {
+            event.preventDefault();
         }
-
-
-        function isOpponentPiece(piece, targetPiece) {
-            return (piece.toLowerCase() !== targetPiece.toLowerCase()) && (piece !== ' ') && (targetPiece !== ' ');
-        }
-
 
         createBoard();
     </script>
