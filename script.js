@@ -73,8 +73,12 @@ function startClock() {
 // Toggle active player
 function togglePlayer() {
     if (gameEnded) return; // Prevent toggling after the game has ended
-    
+
     clearInterval(timerInterval);
+    
+    // Play notification sound
+    const notifySound = document.getElementById('notifySound');
+    notifySound.play();
     
     // Apply increment to the current player (active player)
     if (activePlayer === 1) {
