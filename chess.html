@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 0;
+            border: 2px solid #333;
+        }
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            cursor: pointer;
+        }
+        .white {
+            background-color: #f0d9b5;
+        }
+        .black {
+            background-color: #b58863;
+        }
+        .piece {
+            user-select: none;
+        }
+        .selected {
+            outline: 2px solid red;
+        }
+    </style>
+</head>
+<body>
+    <div id="chessboard"></div>
+    <script>
+        const pieces = {
+            r: '♜', n: '♞', b: '♝', q: '♛', k: '♚', p: '♟',
+            R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔', P: '♙'
+        };
+
+
+        const initialBoard = [
+            'rnbqkbnr', 'pppppppp', '        ', '        ',
+            '        ', '        ', 'PPPPPPPP', 'RNBQKBNR'
+        ];
+
+
+        let board = initialBoard.map(row => row.split(''));
+        let selectedPiece = null;
+        let selectedSquare = null;
+
+
+        const chessboard = document.getElementById('chessboard');
+
+
+        function createBoard() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
+                    square.id = `${row}-${col}`;
+                    square.addEventListener('click', () => onSquareClick(row, col));
+                    chessboard.appendChild(square);
+                }
+            }
+            renderBoard();
+        }
+
+
+        function renderBoard() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.getElementById(`${row}-${col}`);
+                    square.innerHTML = board[row][col] === ' ' ? '' : `<span class="piece">${pieces[board[row][col]]}</span>`;
+                }
+            }
+        }
+
+
+        function onSquareClick(row, col) {
+            if (selectedPiece) {
+                movePiece(row, col);
+            } else {
+                selectPiece(row, col);
+            }
+        }
+
+
+        function selectPiece(row, col) {
+            if (board[row][col] !== ' ') {
+                selectedPiece = { row, col, piece: board[row][col] };
+                selectedSquare = document.getElementById(`${row}-${col}`);
+                selectedSquare.classList.add('selected');
+            }
+        }
+
+
+        function movePiece(row, col) {
+            if (selectedPiece && isValidMove(selectedPiece.row, selectedPiece.col, row, col)) {
+                board[row][col] = selectedPiece.piece;
+                board[selectedPiece.row][selectedPiece.col] = ' ';
+                renderBoard();
+                selectedSquare.classList.remove('selected');
+                selectedPiece = null;
+                selectedSquare = null;
+            }
+        }
+
+
+        function isValidMove(fromRow, fromCol, toRow, toCol) {
+            // Basic validation for moving to an empty square or capturing an opponent's piece
+            const piece = board[fromRow][fromCol];
+            const targetPiece = board[toRow][toCol];
+            return targetPiece === ' ' || isOpponentPiece(piece, targetPiece);
+        }
+
+
+        function isOpponentPiece(piece, targetPiece) {
+            return (piece.toLowerCase() !== targetPiece.toLowerCase()) && (piece !== ' ') && (targetPiece !== ' ');
+        }
+
+
+        createBoard();
+    </script>
+</body>
+</html>
