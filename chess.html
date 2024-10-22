@@ -58,6 +58,7 @@
         ];
 
         let board = initialBoard.map(row => row.split(''));
+        let currentPlayer = 'white'; // Track current player
 
         const chessboard = document.getElementById('chessboard');
 
@@ -95,9 +96,11 @@
         }
 
         let draggedPiece;
+        let startRow, startCol;
 
         function onDragStart(event) {
             draggedPiece = event.target;
+            [startRow, startCol] = draggedPiece.id.split('-').slice(1).map(Number);
             draggedPiece.classList.add('dragging');
             setTimeout(() => {
                 draggedPiece.style.display = 'none';
@@ -114,18 +117,30 @@
             event.preventDefault();
             const targetSquare = event.target.closest('.square');
             if (targetSquare && draggedPiece) {
-                const [startRow, startCol] = draggedPiece.id.split('-').slice(1);
-                const [endRow, endCol] = targetSquare.id.split('-');
+                const [endRow, endCol] = targetSquare.id.split('-').map(Number);
+                const piece = board[startRow][startCol];
+                const target = board[endRow][endCol];
                 
-                board[endRow][endCol] = board[startRow][startCol];
-                board[startRow][startCol] = ' ';
-                
-                renderBoard();
+                if (isValidMove(startRow, startCol, endRow, endCol, piece, target)) {
+                    board[endRow][endCol] = piece;
+                    board[startRow][startCol] = ' ';
+                    currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+                    renderBoard();
+                }
             }
         }
 
         function onDragOver(event) {
             event.preventDefault();
+        }
+
+        function isValidMove(startRow, startCol, endRow, endCol, piece, target) {
+            // Simple move validation: Ensure the piece is moving to an empty square or capturing an opponent's piece
+            if (target !== ' ' && target.toLowerCase() === target === piece.toLowerCase()) {
+                return false;
+            }
+            // Add more complex move validation logic here
+            return true;
         }
 
         createBoard();
