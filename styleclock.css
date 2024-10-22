@@ -46,7 +46,20 @@ body::after {
     position: relative; /* Ensure setup is above overlay */
     z-index: 2; /* Position above the overlay */
 }
+.decorated-link {
+    text-decoration: none;
+    color: #0000EE;
+    font-weight: bold;
+    padding: 10px;
+    border: 2px solid #0000EE;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
 
+.decorated-link:hover {
+    background-color: #0000EE;
+    color: #FFFFFF;
+}
 label {
     margin: 10px 0; /* More spacing for labels */
     font-size: 18px; /* Increased font size for readability */
