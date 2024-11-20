@@ -6,44 +6,54 @@
     <title>Tool Menu</title>
     <style>
         body {
-            background-color: #e0f7e0;
+            background: url('tabletBack.avif') no-repeat center center fixed;
+            background-size: cover;
             font-family: Arial, sans-serif;
             text-align: center;
             color: #333;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .menu {
-            margin: 50px auto;
-            width: 90%;
-            max-width: 300px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 80%;
+            max-width: 600px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         .menu-item {
             background-color: #4caf50;
             color: white;
-            padding: 10px 20px;
-            margin: 10px 0;
+            padding: 20px;
+            margin: 10px;
             border: none;
-            border-radius: 5px;
+            border-radius: 15px;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
             font-size: 18px;
             cursor: pointer;
             text-decoration: none;
             transition: background-color 0.3s ease;
+            width: 120px;
+            height: 120px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .menu-item:hover {
             background-color: #45a049;
         }
-        .menu-item img {
-            margin-right: 10px;
-            display: none; /* Hide the img tag */
-        }
         .menu-item::before {
-            margin-right: 10px;
-            font-size: 24px;
+            font-size: 36px;
+            margin-bottom: 10px;
         }
         .menu-item.chess::before {
             content: "♔"; /* UTF-8 Chess King icon */
@@ -51,14 +61,16 @@
         .menu-item.clock::before {
             content: "⏰"; /* UTF-8 Alarm Clock icon */
         }
-        .menu-item .icon {
-            font-size: 24px;
-            margin-right: 10px;
+        .menu-item.store::before {
+            content: "🛒"; /* UTF-8 Shopping Cart icon */
+        }
+        .menu-item.code-editor::before {
+            content: "📝"; /* UTF-8 Memo icon */
         }
         .menu-item .text {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
         }
         .menu-item .name {
             font-size: 18px;
@@ -67,6 +79,7 @@
         .menu-item .description {
             font-size: 14px;
             color: #ddd;
+            text-align: center;
         }
     </style>
 </head>
@@ -75,13 +88,25 @@
         <a href="chess.html" class="menu-item chess">
             <div class="text">
                 <span class="name">Chess</span>
-                <span class="description">Play a game of chess against the computer or a friend.</span>
+                <span class="description">Play a game of chess.</span>
             </div>
         </a>
         <a href="clock.html" class="menu-item clock">
             <div class="text">
                 <span class="name">Clock</span>
-                <span class="description">View the current time and set alarms.</span>
+                <span class="description">View the current time.</span>
+            </div>
+        </a>
+        <a href="store.html" class="menu-item store">
+            <div class="text">
+                <span class="name">App Store</span>
+                <span class="description">Browse and download apps.</span>
+            </div>
+        </a>
+        <a href="autofill.html" class="menu-item code-editor">
+            <div class="text">
+                <span class="name">Code Editor</span>
+                <span class="description">Instantly deploy HTML</span>
             </div>
         </a>
     </div>

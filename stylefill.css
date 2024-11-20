@@ -1,0 +1,145 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.topnav {
+    background-color: #333;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    transition: background-color 0.3s;
+}
+
+.topnav button {
+    padding: 14px 16px;
+    color: white;
+    background-color: #04AA6D;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
+}
+
+.topnav button:hover {
+    background-color: #059862;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.topnav button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.topnav button.save {
+    background-color: #2196F3;
+}
+
+.topnav button.save:hover {
+    background-color: #1976D2;
+}
+
+.topnav button.upload {
+    background-color: #FF9800;
+}
+
+.topnav button.upload:hover {
+    background-color: #FB8C00;
+}
+
+#container {
+    display: flex;
+    height: calc(100vh - 50px);
+    margin-top: 50px;
+    position: relative;
+}
+
+#editor, #result {
+    flex: 1;
+    overflow-y: auto; /* Only vertical scrolling */
+    overflow-x: hidden; /* Disable horizontal scrolling */
+    padding: 10px;
+    transition: width 0.2s, background-color 0.3s, color 0.3s;
+}
+
+#editor {
+    border-right: 2px solid #ccc;
+    resize: none;
+    white-space: pre-wrap; /* Enable text wrapping */
+}
+
+#result {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 50%;
+    background-color: #fff;
+    resize: horizontal;
+    overflow: auto;
+}
+
+#result iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+#framesize {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    transition: background 0.3s, color 0.3s;
+}
+
+#dragbar {
+    width: 5px;
+    cursor: col-resize;
+    background-color: #ccc;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    left: 50%;
+    transition: left 0.2s;
+}
+
+body.darktheme {
+    background-color: #1d2a35;
+    color: #ddd;
+}
+
+body.darktheme .topnav {
+    background-color: #38444d;
+}
+
+body.darktheme #editor {
+    background-color: #282c34;
+    color: #fff;
+}
+
+body.darktheme #result {
+    background-color: #1d2a35;
+}
+
+body.darktheme #framesize {
+    background: rgba(255, 255, 255, 0.7);
+    color: #000;
+}

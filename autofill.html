@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor</title>
+    <link rel="stylesheet" href="stylefill.css">
+    <script src="scriptfill.js" defer></script>
+</head>
+<body>
+    <div class="topnav">
+        <div>
+            <button onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+        <div>
+            <button onclick="runCode()">Run</button>
+            <button class="save" onclick="saveCode()">Save</button>
+            <button class="upload" onclick="document.getElementById('upload').click()">Upload</button>
+            <input type="file" id="upload" style="display: none;" accept=".html,.htm,.txt">
+        </div>
+    </div>
+    <div id="container">
+        <textarea id="editor" placeholder="Write your code here..."></textarea>
+        <div id="dragbar"></div>
+        <div id="result">
+            <iframe id="resultFrame" frameborder="0"></iframe>
+            <div id="framesize"></div>
+        </div>
+    </div>
+</body>
+</html>
