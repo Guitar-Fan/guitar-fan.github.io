@@ -18,7 +18,7 @@ body::before {
     left: 0; /* Align to the left */
     right: 0; /* Stretch to the right */
     bottom: 0; /* Stretch to the bottom */
-    background-image: url('ChessBackground.webp'); /* Same background image */
+    background-image: url('chess-4.jpg'); /* Same background image */
     background-size: cover; /* Ensure the background covers the entire viewport */
     background-position: center; /* Center the background image */
     z-index: 0; /* Ensure the background image is behind everything */
