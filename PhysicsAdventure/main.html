@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Adventure: The Escapist</title>
+    
+    <!-- External CSS Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Physics Engine Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
+    <!-- Animation and Graphics Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.js"></script>
+    
+    <!-- Audio Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+    
+    <!-- UI Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.32/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.32/sweetalert2.min.css">
+    
+    <!-- Math and Utility Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'orbitron': ['Orbitron', 'monospace'],
+                        'rajdhani': ['Rajdhani', 'sans-serif']
+                    },
+                    colors: {
+                        'physics-blue': '#00d4ff',
+                        'physics-purple': '#2d1b69',
+                        'physics-dark': '#0c0c1e',
+                        'physics-light': '#4c7fff'
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        glow: {
+                            '0%': { 'text-shadow': '0 0 5px #00d4ff, 0 0 10px #00d4ff, 0 0 15px #00d4ff' },
+                            '100%': { 'text-shadow': '0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 30px #00d4ff' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+        }
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: none !important;
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .screen.active {
+            display: flex !important;
+        }
+        
+        /* Ensure all screens are hidden by default */
+        #mainMenu, #gameScreen, #tutorialScreen, #conceptsScreen, #introStoryScreen {
+            display: none !important;
+        }
+        
+        /* Show active screens properly */
+        #mainMenu.active, #gameScreen.active, #tutorialScreen.active, #conceptsScreen.active, #introStoryScreen.active {
+            display: flex !important;
+        }
+        
+        /* Stars animation */
+        .stars {
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: sparkle 3s linear infinite;
+        }
+        
+        @keyframes sparkle {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-100px); }
+        }
+        
+        /* Additional animations for menu background */
+        .slow {
+            animation-duration: 15s;
+        }
+        
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fade-in-up 1s ease-out;
+        }
+        
+        /* Game screen specific styling */
+        #gameScreen {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+        }
+        
+        #gameCanvas {
+            background: transparent;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        /* Only loading screen visible initially */
+        #loadingScreen.active {
+            display: flex !important;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+        
+        /* Menu button specific styling */
+        .menu-button {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        /* Start button with gradient */
+        #startGameBtn {
+            background: linear-gradient(to right, #00d4ff, #3b82f6) !important;
+            color: white !important;
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+        }
+        
+        /* Pure CSS Animations (no GSAP dependency) */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes menu-button-enter {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Apply animations */
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
+        
+        .menu-button {
+            animation: menu-button-enter 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .menu-button:nth-child(1) { animation-delay: 0.1s; }
+        .menu-button:nth-child(2) { animation-delay: 0.2s; }
+        .menu-button:nth-child(3) { animation-delay: 0.3s; }
+        
+        /* Hover effects */
+        .menu-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Click feedback */
+        .menu-button.clicked {
+            transform: scale(0.95);
+            transition: transform 0.1s ease;
+        }
+        
+        /* Ensure menu is visible when active */
+        #mainMenu.active {
+            display: flex !important;
+            opacity: 1;
+        }
+        
+        #mainMenu.active .text-center {
+            animation: fadeInUp 1s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-physics-dark via-physics-purple to-physics-dark text-white">
+    <!-- Background Particles -->
+    <div id="particles-js" class="fixed inset-0 z-0"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="screen active flex items-center justify-center z-50">
+        <div class="text-center space-y-8 animate__animated animate__fadeIn">
+            <!-- Modern Loading Spinner -->
+            <div class="relative">
+                <div class="w-24 h-24 mx-auto">
+                    <div class="absolute inset-0 border-4 border-physics-blue/30 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-transparent border-t-physics-blue rounded-full animate-spin"></div>
+                    <div class="absolute inset-2 border-4 border-transparent border-t-physics-light rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="text-6xl font-orbitron font-bold text-physics-blue neon-text animate-glow">
+                Physics Adventure
+            </h1>
+            
+            <!-- Loading Message -->
+            <p id="loadingMessage" class="text-2xl font-rajdhani text-white animate-pulse">
+                Initializing Universe...
+            </p>
+            
+            <!-- Progress Bar -->
+            <div class="w-96 mx-auto space-y-4">
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden glass-effect">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-physics-blue to-physics-light rounded-full transition-all duration-500 shadow-lg shadow-physics-blue/50" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span id="progressText" class="text-physics-blue font-bold">0%</span>
+                    <span id="loadingStep" class="text-white/70">Starting...</span>
+                </div>
+            </div>
+            
+            <!-- Loading Tips -->
+            <div class="glass-effect rounded-lg p-4 max-w-md mx-auto">
+                <p id="loadingTip" class="text-yellow-400 text-lg animate-pulse">
+                    🚀 Tip: Drag and drop objects to see physics in action!
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Menu -->
+    <div id="mainMenu" class="screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-black relative overflow-hidden">
+        <!-- Dark background effects -->
+        <div class="absolute inset-0 z-0">
+            <!-- Animated dark particles -->
+            <div class="stars absolute inset-0 opacity-30"></div>
+            <!-- Dark geometric patterns -->
+            <div class="absolute top-1/4 left-1/4 w-32 h-32 border border-physics-blue/10 rounded-full animate-spin slow"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-24 h-24 border border-purple-500/10 rounded-full animate-ping"></div>
+            <div class="absolute top-1/2 right-1/3 w-16 h-16 border border-physics-light/10 rounded-full animate-pulse"></div>
+        </div>
+        
+        <div class="relative z-10 text-center space-y-12 animate-fade-in-up">
+            <!-- Title -->
+            <div class="space-y-4">
+                <h1 id="gameTitle" class="text-8xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-physics-blue via-blue-400 to-purple-400 neon-text animate-float">
+                    Physics Adventure
+                </h1>
+                <h2 class="text-3xl font-rajdhani font-light text-physics-blue animate-pulse-slow">
+                    The Escapist Chronicles
+                </h2>
+            </div>
+            
+            <!-- Menu Buttons -->
+            <div class="space-y-6">
+                <button id="startGameBtn" class="menu-button group w-80 py-4 px-8 bg-gradient-to-r from-physics-blue to-blue-500 text-white font-rajdhani font-bold text-xl rounded-xl shadow-lg hover:shadow-physics-blue/50 transition-all duration-300 glass-effect">
+                    <span class="flex items-center justify-center space-x-3">
+                        <span class="text-2xl">🚀</span>
+                        <span>Start Adventure</span>
+                    </span>
+                </button>
+                
+                <button id="tutorialBtn" class="menu-button w-80 py-4 px-8 glass-effect text-white font-rajdhani font-bold text-xl rounded-xl shadow-lg hover:shadow-white/20 transition-all duration-300 border border-white/20">
+                    <span class="flex items-center justify-center space-x-3">
+                        <span class="text-2xl">📚</span>
+                        <span>Learn Physics</span>
+                    </span>
+                </button>
+                
+                <button id="conceptsBtn" class="menu-button w-80 py-4 px-8 glass-effect text-white font-rajdhani font-bold text-xl rounded-xl shadow-lg hover:shadow-white/20 transition-all duration-300 border border-white/20">
+                    <span class="flex items-center justify-center space-x-3">
+                        <span class="text-2xl">🧪</span>
+                        <span>Physics Lab</span>
+                    </span>
+                </button>
+            </div>
+            
+            <!-- Version Info -->
+            <div class="text-white/50 text-sm font-rajdhani">
+                v1.0 - Educational Physics Game
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <div class="relative w-full h-full">
+            <!-- HUD -->
+            <div id="gameHUD" class="absolute top-4 left-4 right-4 z-10 flex justify-between">
+                <div class="glass-effect rounded-lg p-4 space-y-2">
+                    <div class="text-physics-blue font-bold">Physics Data</div>
+                    <div class="text-sm space-y-1">
+                        <div>Velocity: <span id="velocityDisplay">0.0 m/s</span></div>
+                        <div>Force: <span id="forceDisplay">0.0 N</span></div>
+                        <div>Energy: <span id="energyDisplay">0.0 J</span></div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-lg p-4">
+                    <button id="pauseBtn" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded transition-colors">
+                        ⏸️ Pause
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Game Canvas -->
+            <canvas id="gameCanvas" class="w-full h-full"></canvas>
+        </div>
+    </div>
+    
+    <!-- Tutorial Screen -->
+    <div id="tutorialScreen" class="screen flex items-center justify-center">
+        <div class="max-w-4xl mx-auto p-8 space-y-8">
+            <h2 class="text-5xl font-orbitron font-bold text-center text-physics-blue neon-text">
+                Physics Tutorial
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass-effect rounded-xl p-6 space-y-4">
+                    <h3 class="text-2xl font-bold text-physics-blue">🌍 Gravity</h3>
+                    <p class="text-lg">Learn how gravitational forces work across different planets!</p>
+                    <div class="bg-black/30 rounded p-4 font-mono text-physics-light">
+                        F = G(m₁m₂)/r²
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6 space-y-4">
+                    <h3 class="text-2xl font-bold text-physics-blue">⚡ Energy</h3>
+                    <p class="text-lg">Discover kinetic and potential energy conservation!</p>
+                    <div class="bg-black/30 rounded p-4 font-mono text-physics-light">
+                        E = KE + PE = ½mv² + mgh
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6 space-y-4">
+                    <h3 class="text-2xl font-bold text-physics-blue">🎯 Momentum</h3>
+                    <p class="text-lg">Experience momentum conservation in collisions!</p>
+                    <div class="bg-black/30 rounded p-4 font-mono text-physics-light">
+                        p = mv
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6 space-y-4">
+                    <h3 class="text-2xl font-bold text-physics-blue">🔄 Forces</h3>
+                    <p class="text-lg">Apply Newton's laws to solve physics puzzles!</p>
+                    <div class="bg-black/30 rounded p-4 font-mono text-physics-light">
+                        F = ma
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button class="back-btn px-8 py-3 glass-effect text-physics-blue font-bold text-lg rounded-lg hover:bg-white/20 transition-all">
+                    ← Back to Menu
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Physics Concepts Screen -->
+    <div id="conceptsScreen" class="screen flex items-center justify-center">
+        <div class="max-w-6xl mx-auto p-8 space-y-8">
+            <h2 class="text-5xl font-orbitron font-bold text-center text-physics-blue neon-text">
+                Physics Laboratory
+            </h2>
+            
+            <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-6">
+                <!-- Concept cards will be populated here -->
+            </div>
+            
+            <div class="text-center">
+                <button class="back-btn px-8 py-3 glass-effect text-physics-blue font-bold text-lg rounded-lg hover:bg-white/20 transition-all">
+                    ← Back to Menu
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Error Display -->
+    <div id="errorDisplay" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-red-500/90 backdrop-blur-sm text-white p-4 rounded-lg shadow-lg max-w-md">
+            <div class="flex items-center space-x-2">
+                <span class="text-xl">⚠️</span>
+                <div>
+                    <div class="font-bold">Error</div>
+                    <div id="errorMessage" class="text-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Introduction Story Screen -->
+    <div id="introStoryScreen" class="screen flex items-center justify-center">
+        <div class="relative w-full h-full bg-gradient-to-b from-purple-900 via-blue-900 to-black overflow-hidden">
+            <!-- Background elements -->
+            <div class="absolute inset-0 z-0">
+                <!-- Animated stars -->
+                <div class="stars absolute inset-0"></div>
+                <!-- Cave entrance silhouette -->
+                <div class="absolute bottom-0 right-0 w-1/3 h-2/3 bg-black opacity-80 rounded-tl-full"></div>
+                <!-- Chasm -->
+                <div class="absolute bottom-0 left-1/3 right-1/3 h-32 bg-black shadow-2xl"></div>
+            </div>
+            
+            <!-- Story content -->
+            <div class="relative z-10 max-w-4xl mx-auto p-8 text-center space-y-6">
+                <!-- Title -->
+                <h1 class="text-6xl font-orbitron font-bold text-physics-blue animate-glow mb-8">
+                    Physics Adventure: The Escapist
+                </h1>
+                
+                <!-- Story dialogue box -->
+                <div id="storyDialogue" class="glass-effect rounded-lg p-6 max-w-3xl mx-auto">
+                    <div id="dialogueContent" class="text-white text-lg leading-relaxed">
+                        <!-- Story content will be injected here -->
+                    </div>
+                    
+                    <!-- Character portraits -->
+                    <div class="flex justify-center mt-6 space-x-8">
+                        <div id="keeperPortrait" class="text-center opacity-0 transition-opacity duration-500">
+                            <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-400 to-purple-600 rounded-full border-4 border-physics-blue shadow-lg flex items-center justify-center text-2xl">
+                                🧙‍♂️
+                            </div>
+                            <div class="text-sm text-physics-blue mt-2 font-semibold">Keeper of Physics</div>
+                        </div>
+                        
+                        <div id="vectorPortrait" class="text-center opacity-0 transition-opacity duration-500">
+                            <div class="w-20 h-20 mx-auto bg-gradient-to-br from-red-500 to-orange-600 rounded-full border-4 border-red-400 shadow-lg flex items-center justify-center text-2xl">
+                                🦹‍♂️
+                            </div>
+                            <div class="text-sm text-red-400 mt-2 font-semibold">Dr. Vector</div>
+                        </div>
+                        
+                        <div id="protagonistPortrait" class="text-center opacity-0 transition-opacity duration-500">
+                            <div class="w-20 h-20 mx-auto bg-gradient-to-br from-green-400 to-blue-500 rounded-full border-4 border-green-400 shadow-lg flex items-center justify-center text-2xl">
+                                🧑‍🔬
+                            </div>
+                            <div class="text-sm text-green-400 mt-2 font-semibold">You (The Protagonist)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation buttons -->
+                <div class="flex justify-center space-x-4 mt-8">
+                    <button id="prevStoryBtn" class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg transition-colors opacity-50 cursor-not-allowed" disabled>
+                        ← Previous
+                    </button>
+                    <button id="nextStoryBtn" class="px-6 py-3 bg-physics-blue hover:bg-blue-600 text-black font-bold rounded-lg transition-colors animate-pulse">
+                        Next →
+                    </button>
+                    <button id="startPuzzleBtn" class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors hidden animate-bounce">
+                        Begin First Puzzle! 🧩
+                    </button>
+                    <button id="skipStoryBtn" class="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition-colors">
+                        Skip Intro ⏭️
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="src/physics/PhysicsUtils.js"></script>
+    <script src="src/components/UIComponent.js"></script>
+    <script src="src/managers/SpriteManager.js"></script>
+    <script src="src/managers/StoryManager.js"></script>
+    <script src="src/phaser/CharacterAssets.js?v=3"></script>
+    <script src="src/phaser/PhaserGameManager.js?v=3"></script>
+    <script src="src/app.js"></script>
+    
+    <!-- Immediate initialization to hide all screens except loading -->
+    <script>
+        // Immediately hide all screens except loading on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure only loading screen is visible
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                if (screen.id !== 'loadingScreen') {
+                    screen.style.display = 'none';
+                    screen.classList.remove('active');
+                }
+            });
+            
+            // Ensure loading screen is visible
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'flex';
+                loadingScreen.classList.add('active');
+            }
+            
+            console.log('🎬 Screen visibility initialized - only loading screen visible');
+        });
+    </script>
+    
+    <!-- Eruda Debugger (keep as requested) -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+        if (typeof eruda !== 'undefined') {
+            eruda.init();
+            console.log('🐛 Eruda debugger initialized');
+        }
+    </script>
+</body>
+</html>

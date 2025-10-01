@@ -1,0 +1,81 @@
+{
+  "name": "physics-adventure",
+  "version": "1.0.0",
+  "description": "An educational physics game where players help The Escapist learn fundamental physics laws",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8080",
+    "build": "echo 'No build process needed - pure HTML/JS/CSS'",
+    "test": "echo 'Tests not implemented yet'"
+  },
+  "keywords": [
+    "physics",
+    "education",
+    "game",
+    "matter.js",
+    "gsap",
+    "particles.js",
+    "interactive"
+  ],
+  "author": "Physics Adventure Team",
+  "license": "MIT",
+  "dependencies": {
+    "note": "All dependencies are loaded via CDN in HTML"
+  },
+  "cdnDependencies": {
+    "matter-js": "0.19.0",
+    "gsap": "3.12.2",
+    "three.js": "r128",
+    "particles.js": "2.0.0",
+    "howler.js": "2.2.4",
+    "sweetalert2": "11.7.32",
+    "lodash": "4.17.21",
+    "tailwindcss": "3.x",
+    "animate.css": "4.1.1",
+    "google-fonts": "Orbitron, Rajdhani"
+  },
+  "features": {
+    "physics": "Matter.js physics engine",
+    "graphics": "HTML5 Canvas with Matter.js renderer",
+    "animations": "GSAP for smooth UI animations",
+    "particles": "Particles.js for background effects",
+    "audio": "Web Audio API with simple sound generation",
+    "ui": "SweetAlert2 for modals and notifications",
+    "styling": "Tailwind CSS with custom physics theme",
+    "fonts": "Google Fonts - Orbitron & Rajdhani"
+  },
+  "projectStructure": {
+    "src/": "Main application source code",
+    "src/managers/": "Game management classes",
+    "src/components/": "Reusable UI components",
+    "src/physics/": "Physics-related utilities",
+    "assets/": "Game assets (sounds, images, etc.)",
+    "lib/": "Local library files",
+    "styles/": "Legacy CSS files (now using Tailwind)",
+    "js/": "Legacy JavaScript files (now in src/)"
+  },
+  "gameFeatures": {
+    "physics": [
+      "Gravity simulation across different planets",
+      "Momentum conservation in collisions",
+      "Energy conservation (kinetic/potential)",
+      "Force visualization and interaction",
+      "Real-time physics parameter display"
+    ],
+    "gameplay": [
+      "Interactive physics objects",
+      "Educational story with The Escapist character",
+      "Progressive difficulty across 5 levels",
+      "Click-to-create physics objects",
+      "Real-time physics data visualization"
+    ],
+    "ui": [
+      "Modern glass-morphism design",
+      "Smooth GSAP animations",
+      "Responsive layout with Tailwind CSS",
+      "Particle background effects",
+      "Audio feedback for interactions"
+    ]
+  }
+}
