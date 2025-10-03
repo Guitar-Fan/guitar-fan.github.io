@@ -8,8 +8,6 @@ class CharacterAssets {
         this.scene = scene;
         this.graphics = scene.add.graphics();
         
-        console.log('🎨 NEW PIXEL ART CharacterAssets system initialized!');
-        
         // Enhanced character design palette
         this.palette = {
             // Main character - Adventure scientist
@@ -247,251 +245,208 @@ class CharacterAssets {
     }
     
     drawProtagonistBase(x, y, breathOffset = 0, blink = false, smile = false) {
-        console.log('🎨 Drawing PIXEL ART character at:', x, y);
         const colors = this.palette.protagonist;
         
-        // Create pixel-perfect scientist character matching the reference image
-        
-        // Head (pixel-perfect rectangle for pixel art style)
+        // Draw head
         this.graphics.fillStyle(colors.skin.primary);
-        this.graphics.fillRect(x - 6, y - 32, 12, 12); // Square head for pixel art
+        this.graphics.fillCircle(x, y - 28, 12);
         
-        // Hair (brown/reddish, messy scientist hair)
-        this.graphics.fillStyle(0x8B4513); // Brown hair
-        this.graphics.fillRect(x - 7, y - 35, 14, 8); // Hair base
-        this.graphics.fillRect(x - 5, y - 37, 4, 2); // Left hair tuft
-        this.graphics.fillRect(x + 1, y - 37, 4, 2); // Right hair tuft
-        this.graphics.fillRect(x - 2, y - 38, 4, 2); // Center hair tuft
+        // Head shadow
+        this.graphics.fillStyle(colors.skin.shadow);
+        this.graphics.fillCircle(x + 3, y - 25, 8);
         
-        // Eyes (pixel art style - rectangular)
+        // Hair (modern scientist style)
+        this.graphics.fillStyle(colors.hair.primary);
+        this.graphics.fillEllipse(x, y - 35, 20, 12);
+        this.graphics.fillRect(x - 8, y - 32, 16, 8);
+        
+        // Hair highlights
+        this.graphics.fillStyle(colors.hair.highlight);
+        this.graphics.fillEllipse(x - 3, y - 33, 4, 6);
+        
+        // Glasses
+        this.graphics.lineStyle(2, colors.accessories.glasses.frame);
+        this.graphics.strokeCircle(x - 4, y - 28, 4);
+        this.graphics.strokeCircle(x + 4, y - 28, 4);
+        this.graphics.lineBetween(x - 0.5, y - 28, x + 0.5, y - 28); // Bridge
+        
+        // Glass lenses
+        this.graphics.fillStyle(colors.accessories.glasses.lens);
+        this.graphics.fillCircle(x - 4, y - 28, 3);
+        this.graphics.fillCircle(x + 4, y - 28, 3);
+        
+        // Eyes
         if (!blink) {
-            this.graphics.fillStyle(0x000000); // Black eyes
-            this.graphics.fillRect(x - 4, y - 28, 2, 2); // Left eye
-            this.graphics.fillRect(x + 2, y - 28, 2, 2); // Right eye
+            this.graphics.fillStyle(colors.eyes.white);
+            this.graphics.fillCircle(x - 4, y - 28, 2);
+            this.graphics.fillCircle(x + 4, y - 28, 2);
             
-            // Eye highlights
-            this.graphics.fillStyle(0xFFFFFF);
-            this.graphics.fillRect(x - 3, y - 28, 1, 1); // Left eye highlight
-            this.graphics.fillRect(x + 3, y - 28, 1, 1); // Right eye highlight
+            this.graphics.fillStyle(colors.eyes.iris);
+            this.graphics.fillCircle(x - 4, y - 28, 1.5);
+            this.graphics.fillCircle(x + 4, y - 28, 1.5);
+            
+            this.graphics.fillStyle(colors.eyes.pupil);
+            this.graphics.fillCircle(x - 4, y - 28, 0.8);
+            this.graphics.fillCircle(x + 4, y - 28, 0.8);
         } else {
-            // Blinking - horizontal lines
-            this.graphics.fillStyle(0x000000);
-            this.graphics.fillRect(x - 4, y - 27, 2, 1);
-            this.graphics.fillRect(x + 2, y - 27, 2, 1);
+            // Blinking
+            this.graphics.lineStyle(2, colors.eyes.pupil);
+            this.graphics.lineBetween(x - 6, y - 28, x - 2, y - 28);
+            this.graphics.lineBetween(x + 2, y - 28, x + 6, y - 28);
         }
         
-        // Mouth (small pixel)
-        this.graphics.fillStyle(0x000000);
+        // Mouth
         if (smile) {
-            this.graphics.fillRect(x - 1, y - 23, 3, 1); // Smile
-            this.graphics.fillRect(x - 2, y - 22, 1, 1); // Left smile
-            this.graphics.fillRect(x + 1, y - 22, 1, 1); // Right smile
+            this.graphics.lineStyle(2, colors.skin.shadow);
+            this.graphics.arc(x, y - 22, 4, 0, Math.PI);
         } else {
-            this.graphics.fillRect(x - 1, y - 23, 2, 1); // Neutral mouth
+            this.graphics.lineStyle(1, colors.skin.shadow);
+            this.graphics.arc(x, y - 22, 2, 0, Math.PI);
         }
         
-        // White lab coat (matching reference image)
-        this.graphics.fillStyle(0xF8F8FF); // Off-white lab coat
-        this.graphics.fillRect(x - 10, y - 20 + breathOffset, 20, 26); // Main coat body
+        // Lab coat (torso)
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.fillRoundedRect(x - 12, y - 15 + breathOffset, 24, 28, 4);
         
-        // Lab coat details
-        this.graphics.fillStyle(0xE0E0E0); // Slightly darker for shading
-        this.graphics.fillRect(x + 6, y - 18 + breathOffset, 4, 22); // Right side shading
-        this.graphics.fillRect(x - 8, y + 4 + breathOffset, 16, 2); // Bottom edge
+        // Lab coat collar
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.fillPolygon([
+            x - 6, y - 15,
+            x - 3, y - 18,
+            x + 3, y - 18,
+            x + 6, y - 15,
+            x + 4, y - 10,
+            x - 4, y - 10
+        ]);
         
-        // Blue shirt/tie visible underneath
-        this.graphics.fillStyle(0x4169E1); // Royal blue
-        this.graphics.fillRect(x - 4, y - 18 + breathOffset, 8, 12); // Shirt V-neck area
-        this.graphics.fillRect(x - 2, y - 16 + breathOffset, 4, 16); // Tie
+        // Shirt underneath
+        this.graphics.fillStyle(colors.clothing.shirt.primary);
+        this.graphics.fillRect(x - 8, y - 12 + breathOffset, 16, 20);
         
-        // Coat collar
-        this.graphics.fillStyle(0xF8F8FF);
-        this.graphics.fillRect(x - 6, y - 20 + breathOffset, 3, 4); // Left collar
-        this.graphics.fillRect(x + 3, y - 20 + breathOffset, 3, 4); // Right collar
-        
-        // Coat buttons
-        this.graphics.fillStyle(0xC0C0C0); // Silver buttons
-        this.graphics.fillRect(x - 7, y - 12 + breathOffset, 2, 2); // Top button
-        this.graphics.fillRect(x - 7, y - 6 + breathOffset, 2, 2); // Middle button
-        this.graphics.fillRect(x - 7, y + 0 + breathOffset, 2, 2); // Bottom button
-        
-        // Dark pants
-        this.graphics.fillStyle(0x2F4F4F); // Dark slate gray pants
-        this.graphics.fillRect(x - 8, y + 6, 16, 2); // Waist/belt area
-        
-        // Brown belt
-        this.graphics.fillStyle(0x8B4513);
-        this.graphics.fillRect(x - 8, y + 6, 16, 2);
+        // Belt
+        this.graphics.fillStyle(colors.clothing.belt.leather);
+        this.graphics.fillRect(x - 10, y + 8, 20, 4);
         
         // Belt buckle
-        this.graphics.fillStyle(0xC0C0C0);
-        this.graphics.fillRect(x - 2, y + 6, 4, 2);
+        this.graphics.fillStyle(colors.clothing.belt.buckle);
+        this.graphics.fillRect(x - 2, y + 8, 4, 4);
+        
+        // ID badge
+        this.graphics.fillStyle(colors.accessories.badge.background);
+        this.graphics.fillRoundedRect(x - 8, y - 8, 6, 8, 2);
+        this.graphics.fillStyle(colors.accessories.badge.text);
+        this.graphics.fillRect(x - 7, y - 6, 4, 1);
+        this.graphics.fillRect(x - 7, y - 4, 4, 1);
     }
     
     addIdleDetails(x, y, frame) {
-        // Pixel-perfect arms and legs for idle animation
-        const armOffset = Math.floor(Math.sin((frame / 6) * Math.PI * 2) * 1); // Subtle pixel movement
+        const colors = this.palette.protagonist;
         
-        // Arms (white lab coat sleeves)
-        this.graphics.fillStyle(0xF8F8FF); // Lab coat white
-        this.graphics.fillRect(x - 16, y - 16 + armOffset, 6, 18); // Left arm
-        this.graphics.fillRect(x + 10, y - 16 - armOffset, 6, 18); // Right arm
+        // Gentle arm positioning
+        const armOffset = Math.sin((frame / 6) * Math.PI * 2) * 2;
         
-        // Arm shading
-        this.graphics.fillStyle(0xE0E0E0);
-        this.graphics.fillRect(x - 12, y - 14 + armOffset, 2, 14); // Left arm shade
-        this.graphics.fillRect(x + 14, y - 14 - armOffset, 2, 14); // Right arm shade
+        // Arms
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.fillRoundedRect(x - 18, y - 8 + armOffset, 6, 20, 3); // Left arm
+        this.graphics.fillRoundedRect(x + 12, y - 8 - armOffset, 6, 20, 3); // Right arm
         
-        // Hands (skin color)
-        this.graphics.fillStyle(0xFFDBB8); // Skin tone
-        this.graphics.fillRect(x - 16, y + 2 + armOffset, 6, 4); // Left hand
-        this.graphics.fillRect(x + 10, y + 2 - armOffset, 6, 4); // Right hand
+        // Hands
+        this.graphics.fillStyle(colors.skin.primary);
+        this.graphics.fillCircle(x - 15, y + 12 + armOffset, 3);
+        this.graphics.fillCircle(x + 15, y + 12 - armOffset, 3);
         
-        // Legs (dark pants)
-        this.graphics.fillStyle(0x2F4F4F); // Dark pants
-        this.graphics.fillRect(x - 6, y + 8, 5, 18); // Left leg
-        this.graphics.fillRect(x + 1, y + 8, 5, 18); // Right leg
+        // Legs
+        this.graphics.fillStyle(colors.clothing.pants.primary);
+        this.graphics.fillRoundedRect(x - 8, y + 12, 6, 20, 3); // Left leg
+        this.graphics.fillRoundedRect(x + 2, y + 12, 6, 20, 3); // Right leg
         
-        // Leg shading
-        this.graphics.fillStyle(0x1C1C1C); // Darker shade
-        this.graphics.fillRect(x - 2, y + 10, 1, 14); // Left leg shade
-        this.graphics.fillRect(x + 5, y + 10, 1, 14); // Right leg shade
+        // Shoes
+        this.graphics.fillStyle(colors.clothing.shoes.primary);
+        this.graphics.fillRoundedRect(x - 10, y + 32, 10, 6, 3); // Left shoe
+        this.graphics.fillRoundedRect(x, y + 32, 10, 6, 3); // Right shoe
         
-        // Shoes (brown/dark)
-        this.graphics.fillStyle(0x654321); // Brown shoes
-        this.graphics.fillRect(x - 8, y + 26, 8, 4); // Left shoe
-        this.graphics.fillRect(x + 0, y + 26, 8, 4); // Right shoe
-        
-        // Shoe details
-        this.graphics.fillStyle(0x4A4A4A); // Dark gray for shoe soles
-        this.graphics.fillRect(x - 8, y + 29, 8, 1); // Left sole
-        this.graphics.fillRect(x + 0, y + 29, 8, 1); // Right sole
-        
-        // Shoe laces (white pixels)
-        this.graphics.fillStyle(0xFFFFFF);
-        this.graphics.fillRect(x - 6, y + 27, 1, 1); // Left lace
-        this.graphics.fillRect(x - 4, y + 27, 1, 1); // Left lace
-        this.graphics.fillRect(x + 2, y + 27, 1, 1); // Right lace
-        this.graphics.fillRect(x + 4, y + 27, 1, 1); // Right lace
+        // Shoe laces
+        this.graphics.lineStyle(1, colors.clothing.shoes.laces);
+        this.graphics.lineBetween(x - 8, y + 34, x - 2, y + 34);
+        this.graphics.lineBetween(x + 2, y + 34, x + 8, y + 34);
     }
     
     addWalkingDetails(x, y, armSwing, legSwing, headBob) {
-        // Pixel-perfect walking animation with simplified movements
-        const pixelArmSwing = Math.floor(armSwing * 0.2); // Convert to pixel movement
-        const pixelLegSwing = Math.floor(legSwing * 0.3); // Convert to pixel movement
+        const colors = this.palette.protagonist;
         
-        // Arms (lab coat sleeves) - simple horizontal movement
-        this.graphics.fillStyle(0xF8F8FF); // Lab coat white
-        this.graphics.fillRect(x - 16 + pixelArmSwing, y - 16, 6, 18); // Left arm
-        this.graphics.fillRect(x + 10 - pixelArmSwing, y - 16, 6, 18); // Right arm
+        // Dynamic arm positions
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.save();
+        this.graphics.translate(x - 15, y - 5);
+        this.graphics.rotate(armSwing * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 18, 3);
+        this.graphics.restore();
         
-        // Arm shading
-        this.graphics.fillStyle(0xE0E0E0);
-        this.graphics.fillRect(x - 12 + pixelArmSwing, y - 14, 2, 14); // Left arm shade
-        this.graphics.fillRect(x + 14 - pixelArmSwing, y - 14, 2, 14); // Right arm shade
+        this.graphics.save();
+        this.graphics.translate(x + 15, y - 5);
+        this.graphics.rotate(-armSwing * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 18, 3);
+        this.graphics.restore();
         
-        // Hands
-        this.graphics.fillStyle(0xFFDBB8); // Skin tone
-        this.graphics.fillRect(x - 16 + pixelArmSwing, y + 2, 6, 4); // Left hand
-        this.graphics.fillRect(x + 10 - pixelArmSwing, y + 2, 6, 4); // Right hand
+        // Dynamic leg positions
+        this.graphics.fillStyle(colors.clothing.pants.primary);
+        this.graphics.fillRoundedRect(x - 8 + legSwing * 0.3, y + 12, 6, 20, 3);
+        this.graphics.fillRoundedRect(x + 2 - legSwing * 0.3, y + 12, 6, 20, 3);
         
-        // Walking legs - alternating positions
-        this.graphics.fillStyle(0x2F4F4F); // Dark pants
-        this.graphics.fillRect(x - 6 + pixelLegSwing, y + 8, 5, 18); // Left leg
-        this.graphics.fillRect(x + 1 - pixelLegSwing, y + 8, 5, 18); // Right leg
-        
-        // Leg shading
-        this.graphics.fillStyle(0x1C1C1C); // Darker shade
-        this.graphics.fillRect(x - 2 + pixelLegSwing, y + 10, 1, 14); // Left leg shade
-        this.graphics.fillRect(x + 5 - pixelLegSwing, y + 10, 1, 14); // Right leg shade
-        
-        // Shoes - following leg positions
-        this.graphics.fillStyle(0x654321); // Brown shoes
-        this.graphics.fillRect(x - 8 + pixelLegSwing, y + 26, 8, 4); // Left shoe
-        this.graphics.fillRect(x + 0 - pixelLegSwing, y + 26, 8, 4); // Right shoe
-        
-        // Shoe soles
-        this.graphics.fillStyle(0x4A4A4A); // Dark gray
-        this.graphics.fillRect(x - 8 + pixelLegSwing, y + 29, 8, 1); // Left sole
-        this.graphics.fillRect(x + 0 - pixelLegSwing, y + 29, 8, 1); // Right sole
-        
-        // Shoe laces
-        this.graphics.fillStyle(0xFFFFFF);
-        this.graphics.fillRect(x - 6 + pixelLegSwing, y + 27, 1, 1); // Left lace
-        this.graphics.fillRect(x - 4 + pixelLegSwing, y + 27, 1, 1); // Left lace  
-        this.graphics.fillRect(x + 2 - pixelLegSwing, y + 27, 1, 1); // Right lace
-        this.graphics.fillRect(x + 4 - pixelLegSwing, y + 27, 1, 1); // Right lace
+        // Moving shoes
+        this.graphics.fillStyle(colors.clothing.shoes.primary);
+        this.graphics.fillRoundedRect(x - 10 + legSwing * 0.3, y + 32, 10, 6, 3);
+        this.graphics.fillRoundedRect(x - legSwing * 0.3, y + 32, 10, 6, 3);
     }
     
     addJumpingDetails(x, y, phase) {
-        // Pixel-perfect jumping positions based on phase
-        let armOffset = 0;
-        let legOffset = 0;
-        let armHeight = 18;
-        let legHeight = 18;
+        const colors = this.palette.protagonist;
+        
+        let armAngle = 0;
+        let legPosition = 0;
         
         switch (phase) {
             case 'prepare':
-                armOffset = -2; // Arms slightly back
-                legOffset = 2; // Legs slightly bent
-                legHeight = 16; // Shorter legs when crouched
+                armAngle = -30;
+                legPosition = 5;
                 break;
             case 'launch':
-                armOffset = 3; // Arms forward
-                legOffset = -4; // Legs extending
+                armAngle = 45;
+                legPosition = -10;
                 break;
             case 'peak':
-                armOffset = 4; // Arms fully extended
-                legOffset = -6; // Legs tucked up
-                legHeight = 14; // Legs bent up
+                armAngle = 60;
+                legPosition = -15;
                 break;
             case 'descend':
-                armOffset = 2; // Arms slightly forward
-                legOffset = -2; // Legs preparing to land
+                armAngle = 30;
+                legPosition = -5;
                 break;
         }
         
-        // Arms in jumping position (lab coat sleeves)
-        this.graphics.fillStyle(0xF8F8FF); // Lab coat white
-        this.graphics.fillRect(x - 16 + armOffset, y - 16, 6, armHeight); // Left arm
-        this.graphics.fillRect(x + 10 + armOffset, y - 16, 6, armHeight); // Right arm
+        // Arms in jumping position
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.save();
+        this.graphics.translate(x - 15, y - 5);
+        this.graphics.rotate(armAngle * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 18, 3);
+        this.graphics.restore();
         
-        // Arm shading
-        this.graphics.fillStyle(0xE0E0E0);
-        this.graphics.fillRect(x - 12 + armOffset, y - 14, 2, armHeight - 2); // Left arm shade
-        this.graphics.fillRect(x + 14 + armOffset, y - 14, 2, armHeight - 2); // Right arm shade
+        this.graphics.save();
+        this.graphics.translate(x + 15, y - 5);
+        this.graphics.rotate(armAngle * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 18, 3);
+        this.graphics.restore();
         
-        // Hands
-        this.graphics.fillStyle(0xFFDBB8); // Skin tone
-        this.graphics.fillRect(x - 16 + armOffset, y + 2, 6, 4); // Left hand
-        this.graphics.fillRect(x + 10 + armOffset, y + 2, 6, 4); // Right hand
-        
-        // Legs in jumping position (dark pants)
-        this.graphics.fillStyle(0x2F4F4F); // Dark pants
-        this.graphics.fillRect(x - 6, y + 8 + legOffset, 5, legHeight); // Left leg
-        this.graphics.fillRect(x + 1, y + 8 + legOffset, 5, legHeight); // Right leg
-        
-        // Leg shading
-        this.graphics.fillStyle(0x1C1C1C); // Darker shade
-        this.graphics.fillRect(x - 2, y + 10 + legOffset, 1, legHeight - 2); // Left leg shade
-        this.graphics.fillRect(x + 5, y + 10 + legOffset, 1, legHeight - 2); // Right leg shade
+        // Legs in jumping position
+        this.graphics.fillStyle(colors.clothing.pants.primary);
+        this.graphics.fillRoundedRect(x - 8, y + 12 + legPosition, 6, 20 - Math.abs(legPosition), 3);
+        this.graphics.fillRoundedRect(x + 2, y + 12 + legPosition, 6, 20 - Math.abs(legPosition), 3);
         
         // Shoes
-        this.graphics.fillStyle(0x654321); // Brown shoes
-        this.graphics.fillRect(x - 8, y + 26 + legOffset, 8, 4); // Left shoe
-        this.graphics.fillRect(x + 0, y + 26 + legOffset, 8, 4); // Right shoe
-        
-        // Shoe soles
-        this.graphics.fillStyle(0x4A4A4A); // Dark gray
-        this.graphics.fillRect(x - 8, y + 29 + legOffset, 8, 1); // Left sole
-        this.graphics.fillRect(x + 0, y + 29 + legOffset, 8, 1); // Right sole
-        
-        // Shoe laces
-        this.graphics.fillStyle(0xFFFFFF);
-        this.graphics.fillRect(x - 6, y + 27 + legOffset, 1, 1); // Left lace
-        this.graphics.fillRect(x - 4, y + 27 + legOffset, 1, 1); // Left lace
-        this.graphics.fillRect(x + 2, y + 27 + legOffset, 1, 1); // Right lace
-        this.graphics.fillRect(x + 4, y + 27 + legOffset, 1, 1); // Right lace
+        this.graphics.fillStyle(colors.clothing.shoes.primary);
+        this.graphics.fillRoundedRect(x - 10, y + 32 + legPosition, 10, 6, 3);
+        this.graphics.fillRoundedRect(x, y + 32 + legPosition, 10, 6, 3);
     }
     
     addRunningDetails(x, y, armSwing, legSwing) {
@@ -500,148 +455,69 @@ class CharacterAssets {
     }
     
     addClimbingDetails(x, y, armReach) {
-        // Pixel-perfect climbing pose with arms reaching up
-        const reachOffset = Math.floor(armReach * 0.1); // Convert to pixel movement
+        const colors = this.palette.protagonist;
         
-        // Arms reaching upward (lab coat sleeves)
-        this.graphics.fillStyle(0xF8F8FF); // Lab coat white
-        this.graphics.fillRect(x - 18 + reachOffset, y - 20, 6, 16); // Left arm reaching up
-        this.graphics.fillRect(x + 12 - reachOffset, y - 20, 6, 16); // Right arm reaching up
+        // Arms reaching upward
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.save();
+        this.graphics.translate(x - 15, y - 10);
+        this.graphics.rotate(-60 * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 20, 3);
+        this.graphics.restore();
         
-        // Arm shading
-        this.graphics.fillStyle(0xE0E0E0);
-        this.graphics.fillRect(x - 14 + reachOffset, y - 18, 2, 12); // Left arm shade
-        this.graphics.fillRect(x + 16 - reachOffset, y - 18, 2, 12); // Right arm shade
+        this.graphics.save();
+        this.graphics.translate(x + 15, y - 10);
+        this.graphics.rotate(-120 * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 20, 3);
+        this.graphics.restore();
         
-        // Hands reaching
-        this.graphics.fillStyle(0xFFDBB8); // Skin tone
-        this.graphics.fillRect(x - 18 + reachOffset, y - 4, 6, 4); // Left hand
-        this.graphics.fillRect(x + 12 - reachOffset, y - 4, 6, 4); // Right hand
-        
-        // Legs in climbing position (one higher than other)
-        this.graphics.fillStyle(0x2F4F4F); // Dark pants
-        this.graphics.fillRect(x - 8, y + 8, 5, 16); // Left leg (higher)
-        this.graphics.fillRect(x + 3, y + 12, 5, 14); // Right leg (lower)
-        
-        // Leg shading
-        this.graphics.fillStyle(0x1C1C1C); // Darker shade
-        this.graphics.fillRect(x - 4, y + 10, 1, 12); // Left leg shade
-        this.graphics.fillRect(x + 7, y + 14, 1, 10); // Right leg shade
-        
-        // Climbing shoes
-        this.graphics.fillStyle(0x654321); // Brown shoes
-        this.graphics.fillRect(x - 10, y + 24, 8, 4); // Left shoe
-        this.graphics.fillRect(x + 1, y + 26, 8, 4); // Right shoe
-        
-        // Shoe soles
-        this.graphics.fillStyle(0x4A4A4A); // Dark gray
-        this.graphics.fillRect(x - 10, y + 27, 8, 1); // Left sole
-        this.graphics.fillRect(x + 1, y + 29, 8, 1); // Right sole
-        
-        // Shoe laces
-        this.graphics.fillStyle(0xFFFFFF);
-        this.graphics.fillRect(x - 8, y + 25, 1, 1); // Left lace
-        this.graphics.fillRect(x - 6, y + 25, 1, 1); // Left lace
-        this.graphics.fillRect(x + 3, y + 27, 1, 1); // Right lace
-        this.graphics.fillRect(x + 5, y + 27, 1, 1); // Right lace
+        // Legs in climbing position
+        this.graphics.fillStyle(colors.clothing.pants.primary);
+        this.graphics.fillRoundedRect(x - 10, y + 12, 6, 18, 3);
+        this.graphics.fillRoundedRect(x + 4, y + 15, 6, 15, 3);
     }
     
     addInteractionDetails(x, y, handMotion) {
-        // Pixel-perfect interaction pose with one arm extended
-        const motionOffset = Math.floor(handMotion * 0.1); // Convert to pixel movement
+        const colors = this.palette.protagonist;
         
-        // Extended arm for interaction (lab coat sleeve)
-        this.graphics.fillStyle(0xF8F8FF); // Lab coat white
-        this.graphics.fillRect(x + 10 + motionOffset, y - 12, 8, 6); // Extended right arm (horizontal)
-        this.graphics.fillRect(x + 18 + motionOffset, y - 12, 6, 14); // Extended forearm
+        // One arm extended for interaction
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.save();
+        this.graphics.translate(x + 15, y - 5);
+        this.graphics.rotate((45 + handMotion) * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 18, 3);
+        this.graphics.restore();
         
         // Other arm at side
-        this.graphics.fillRect(x - 16, y - 16, 6, 18); // Left arm at side
+        this.graphics.fillRoundedRect(x - 18, y - 8, 6, 20, 3);
         
-        // Arm shading
-        this.graphics.fillStyle(0xE0E0E0);
-        this.graphics.fillRect(x + 14 + motionOffset, y - 10, 2, 4); // Extended arm shade
-        this.graphics.fillRect(x + 22 + motionOffset, y - 10, 2, 10); // Extended forearm shade
-        this.graphics.fillRect(x - 12, y - 14, 2, 14); // Left arm shade
-        
-        // Hands
-        this.graphics.fillStyle(0xFFDBB8); // Skin tone
-        this.graphics.fillRect(x + 24 + motionOffset, y + 2, 6, 4); // Extended hand
-        this.graphics.fillRect(x - 16, y + 2, 6, 4); // Left hand
-        
-        // Normal leg stance (dark pants)
-        this.graphics.fillStyle(0x2F4F4F); // Dark pants
-        this.graphics.fillRect(x - 6, y + 8, 5, 18); // Left leg
-        this.graphics.fillRect(x + 1, y + 8, 5, 18); // Right leg
-        
-        // Leg shading
-        this.graphics.fillStyle(0x1C1C1C); // Darker shade
-        this.graphics.fillRect(x - 2, y + 10, 1, 14); // Left leg shade
-        this.graphics.fillRect(x + 5, y + 10, 1, 14); // Right leg shade
-        
-        // Shoes
-        this.graphics.fillStyle(0x654321); // Brown shoes
-        this.graphics.fillRect(x - 8, y + 26, 8, 4); // Left shoe
-        this.graphics.fillRect(x + 0, y + 26, 8, 4); // Right shoe
-        
-        // Shoe soles
-        this.graphics.fillStyle(0x4A4A4A); // Dark gray
-        this.graphics.fillRect(x - 8, y + 29, 8, 1); // Left sole
-        this.graphics.fillRect(x + 0, y + 29, 8, 1); // Right sole
-        
-        // Shoe laces
-        this.graphics.fillStyle(0xFFFFFF);
-        this.graphics.fillRect(x - 6, y + 27, 1, 1); // Left lace
-        this.graphics.fillRect(x - 4, y + 27, 1, 1); // Left lace
-        this.graphics.fillRect(x + 2, y + 27, 1, 1); // Right lace
-        this.graphics.fillRect(x + 4, y + 27, 1, 1); // Right lace
+        // Normal leg stance
+        this.graphics.fillStyle(colors.clothing.pants.primary);
+        this.graphics.fillRoundedRect(x - 8, y + 12, 6, 20, 3);
+        this.graphics.fillRoundedRect(x + 2, y + 12, 6, 20, 3);
     }
     
     addCelebrationDetails(x, y, armRaise) {
-        // Pixel-perfect celebration pose with arms raised high
-        const raiseOffset = Math.floor(armRaise * 0.1); // Convert to pixel movement
+        const colors = this.palette.protagonist;
         
-        // Arms raised in celebration (lab coat sleeves)
-        this.graphics.fillStyle(0xF8F8FF); // Lab coat white
-        this.graphics.fillRect(x - 18 + raiseOffset, y - 22, 6, 18); // Left arm raised
-        this.graphics.fillRect(x + 12 - raiseOffset, y - 22, 6, 18); // Right arm raised
+        // Arms raised in celebration
+        this.graphics.fillStyle(colors.clothing.labCoat.primary);
+        this.graphics.save();
+        this.graphics.translate(x - 15, y - 10);
+        this.graphics.rotate((-90 + armRaise) * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 18, 3);
+        this.graphics.restore();
         
-        // Arm shading
-        this.graphics.fillStyle(0xE0E0E0);
-        this.graphics.fillRect(x - 14 + raiseOffset, y - 20, 2, 14); // Left arm shade
-        this.graphics.fillRect(x + 16 - raiseOffset, y - 20, 2, 14); // Right arm shade
+        this.graphics.save();
+        this.graphics.translate(x + 15, y - 10);
+        this.graphics.rotate((-90 - armRaise) * Math.PI / 180);
+        this.graphics.fillRoundedRect(-3, 0, 6, 18, 3);
+        this.graphics.restore();
         
-        // Hands raised up
-        this.graphics.fillStyle(0xFFDBB8); // Skin tone
-        this.graphics.fillRect(x - 18 + raiseOffset, y - 4, 6, 4); // Left hand
-        this.graphics.fillRect(x + 12 - raiseOffset, y - 4, 6, 4); // Right hand
-        
-        // Legs in celebration stance (dark pants)
-        this.graphics.fillStyle(0x2F4F4F); // Dark pants
-        this.graphics.fillRect(x - 6, y + 8, 5, 18); // Left leg
-        this.graphics.fillRect(x + 1, y + 8, 5, 18); // Right leg
-        
-        // Leg shading
-        this.graphics.fillStyle(0x1C1C1C); // Darker shade
-        this.graphics.fillRect(x - 2, y + 10, 1, 14); // Left leg shade
-        this.graphics.fillRect(x + 5, y + 10, 1, 14); // Right leg shade
-        
-        // Celebration shoes
-        this.graphics.fillStyle(0x654321); // Brown shoes
-        this.graphics.fillRect(x - 8, y + 26, 8, 4); // Left shoe
-        this.graphics.fillRect(x + 0, y + 26, 8, 4); // Right shoe
-        
-        // Shoe soles
-        this.graphics.fillStyle(0x4A4A4A); // Dark gray
-        this.graphics.fillRect(x - 8, y + 29, 8, 1); // Left sole
-        this.graphics.fillRect(x + 0, y + 29, 8, 1); // Right sole
-        
-        // Shoe laces
-        this.graphics.fillStyle(0xFFFFFF);
-        this.graphics.fillRect(x - 6, y + 27, 1, 1); // Left lace
-        this.graphics.fillRect(x - 4, y + 27, 1, 1); // Left lace
-        this.graphics.fillRect(x + 2, y + 27, 1, 1); // Right lace
-        this.graphics.fillRect(x + 4, y + 27, 1, 1); // Right lace
+        // Legs in jumping/celebration position
+        this.graphics.fillStyle(colors.clothing.pants.primary);
+        this.graphics.fillRoundedRect(x - 8, y + 12, 6, 20, 3);
+        this.graphics.fillRoundedRect(x + 2, y + 12, 6, 20, 3);
     }
     
     createEnvironmentalAssets() {

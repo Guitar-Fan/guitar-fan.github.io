@@ -73,12 +73,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize loading system
         initializeLoadingSystem();
         
-        // Create and initialize Phaser game manager
+        // Create and initialize game manager
         updateLoadingProgress('Creating Game Manager...', 10);
-        gameManager = new PhaserGameManager();
+        gameManager = window.gameManager; // Use the global instance from GameManagerSimple.js
         
         if (!gameManager) {
-            throw new Error('PhaserGameManager could not be created');
+            throw new Error('GameManager not found');
         }
         
         // Initialize components step by step
@@ -397,16 +397,17 @@ function setupUIInteractions() {
         console.log('🧩 Starting first puzzle...');
         showScreen('gameScreen');
         
-        // Initialize Phaser game manager for the first puzzle
+        // Initialize game manager for the first puzzle
         if (!gameManager) {
-            gameManager = new PhaserGameManager();
+            gameManager = new GameManager();
         }
         
-        const success = gameManager.init('gameCanvas');
+        const success = gameManager.init();
         if (success) {
-            console.log('✅ Phaser game initialized successfully');
+            // Start the zipline puzzle (level 1)
+            gameManager.startZiplinePuzzle();
         } else {
-            showError('Failed to initialize Phaser game engine');
+            showError('Failed to initialize game engine');
         }
     });
     
@@ -420,12 +421,8 @@ function setupUIInteractions() {
     
     // Pause button
     document.getElementById('pauseBtn')?.addEventListener('click', () => {
-        if (gameManager && gameManager.game) {
-            if (gameManager.game.scene.isPaused()) {
-                gameManager.game.scene.resume();
-            } else {
-                gameManager.game.scene.pause();
-            }
+        if (gameManager) {
+            gameManager.togglePause();
         }
     });
     
@@ -433,7 +430,7 @@ function setupUIInteractions() {
     document.addEventListener('keydown', (e) => {
         switch (e.key) {
             case 'Escape':
-                if (gameManager && gameManager.game) {
+                if (gameManager && gameManager.isRunning) {
                     showScreen('mainMenu');
                 }
                 break;
@@ -543,13 +540,16 @@ function showError(message) {
 
 // Window resize handler
 window.addEventListener('resize', () => {
-    if (gameManager && gameManager.game) {
-        gameManager.game.scale.refresh();
+    if (game && game.render) {
+        game.render.canvas.width = window.innerWidth;
+        game.render.canvas.height = window.innerHeight;
+        game.render.options.width = window.innerWidth;
+        game.render.options.height = window.innerHeight;
     }
 });
 
 // Export globals for debugging
-window.gameManager = gameManager;
+window.game = () => game;
 window.showScreen = showScreen;
 window.simpleSounds = simpleSounds;
 

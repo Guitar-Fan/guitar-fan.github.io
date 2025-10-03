@@ -158,16 +158,93 @@ class PhaserGameManager {
     }
     
     createProtagonistIdleSprite(graphics) {
-        const rt = this.add.renderTexture(0, 0, 64, 64);
+        const rt = this.add.renderTexture(0, 0, 48, 64);
         graphics.clear();
         
-        // Use the new pixel art CharacterAssets system
-        if (this.characterAssets) {
-            console.log('🎨 Using NEW PIXEL ART character system for protagonist!');
-            this.characterAssets.graphics = graphics;
-            this.characterAssets.drawProtagonistBase(32, 40, 0, false, false);
-            this.characterAssets.addIdleDetails(32, 40, 0);
-        }
+        // Character design - modern adventurer style
+        const colors = {
+            skin: 0xFFDBAC,
+            hair: 0x8B4513,
+            shirt: 0x4A90E2,
+            pants: 0x2D3748,
+            shoes: 0x654321,
+            belt: 0x8B4513,
+            outline: 0x2C3E50
+        };
+        
+        // Draw character body (centered at 24, 32)
+        graphics.lineStyle(2, colors.outline);
+        
+        // Head (circular with proper proportions)
+        graphics.fillStyle(colors.skin);
+        graphics.fillCircle(24, 16, 8);
+        graphics.strokeCircle(24, 16, 8);
+        
+        // Hair (modern style)
+        graphics.fillStyle(colors.hair);
+        graphics.fillEllipse(24, 12, 14, 8);
+        
+        // Eyes (expressive and detailed)
+        graphics.fillStyle(0x333333);
+        graphics.fillCircle(21, 14, 1.5);
+        graphics.fillCircle(27, 14, 1.5);
+        
+        // Eyebrows
+        graphics.lineStyle(1, 0x654321);
+        graphics.lineBetween(19, 12, 23, 11);
+        graphics.lineBetween(25, 11, 29, 12);
+        
+        // Mouth (slight smile)
+        graphics.arc(24, 17, 3, 0, Math.PI, false);
+        graphics.strokePath();
+        
+        // Body/Torso (shirt with details)
+        graphics.lineStyle(2, colors.outline);
+        graphics.fillStyle(colors.shirt);
+        graphics.fillRoundedRect(16, 24, 16, 20, 2);
+        graphics.strokeRoundedRect(16, 24, 16, 20, 2);
+        
+        // Shirt collar and buttons
+        graphics.fillStyle(colors.outline);
+        graphics.fillCircle(24, 28, 1);
+        graphics.fillCircle(24, 34, 1);
+        graphics.fillCircle(24, 40, 1);
+        
+        // Arms (realistic proportions)
+        graphics.fillStyle(colors.skin);
+        graphics.fillRoundedRect(12, 26, 4, 16, 2); // Left arm
+        graphics.fillRoundedRect(32, 26, 4, 16, 2); // Right arm
+        graphics.strokeRoundedRect(12, 26, 4, 16, 2);
+        graphics.strokeRoundedRect(32, 26, 4, 16, 2);
+        
+        // Hands
+        graphics.fillCircle(14, 42, 2);
+        graphics.fillCircle(34, 42, 2);
+        graphics.strokeCircle(14, 42, 2);
+        graphics.strokeCircle(34, 42, 2);
+        
+        // Legs (pants with belt)
+        graphics.fillStyle(colors.belt);
+        graphics.fillRoundedRect(17, 44, 14, 3, 1); // Belt
+        graphics.strokeRoundedRect(17, 44, 14, 3, 1);
+        
+        graphics.fillStyle(colors.pants);
+        graphics.fillRoundedRect(18, 44, 5, 16, 2); // Left leg
+        graphics.fillRoundedRect(25, 44, 5, 16, 2); // Right leg
+        graphics.strokeRoundedRect(18, 44, 5, 16, 2);
+        graphics.strokeRoundedRect(25, 44, 5, 16, 2);
+        
+        // Shoes (detailed with laces)
+        graphics.fillStyle(colors.shoes);
+        graphics.fillRoundedRect(16, 60, 7, 4, 1); // Left shoe
+        graphics.fillRoundedRect(25, 60, 7, 4, 1); // Right shoe
+        graphics.strokeRoundedRect(16, 60, 7, 4, 1);
+        graphics.strokeRoundedRect(25, 60, 7, 4, 1);
+        
+        // Shoe laces
+        graphics.lineStyle(1, 0xFFFFFF);
+        graphics.lineBetween(17, 61, 22, 61);
+        graphics.lineBetween(26, 61, 31, 61);
         
         rt.draw(graphics, 0, 0);
         rt.saveTexture('protagonist_idle');
@@ -177,28 +254,74 @@ class PhaserGameManager {
     }
     
     createProtagonistWalkFrame(graphics, frameIndex) {
-        const rt = this.add.renderTexture(0, 0, 64, 64);
+        const rt = this.add.renderTexture(0, 0, 48, 64);
         graphics.clear();
         
-        // Use the new pixel art CharacterAssets system
-        if (this.characterAssets) {
-            console.log('🎨 Using NEW PIXEL ART walking frame:', frameIndex);
-            this.characterAssets.graphics = graphics;
-            
-            // Walking animation calculations  
-            const walkCycle = frameIndex / 8 * Math.PI * 2;
-            const armSwing = Math.sin(walkCycle) * 15;
-            const legSwing = Math.sin(walkCycle + Math.PI) * 10;
-            const bodyBob = Math.sin(walkCycle * 2) * 2;
-            
-            this.characterAssets.drawProtagonistBase(32, 40 + bodyBob, 0, false, false);
-            this.characterAssets.addWalkingDetails(32, 40 + bodyBob, armSwing, legSwing, bodyBob);
-        } else {
-            console.warn('⚠️ CharacterAssets not available for walking frame');
-            // Simple fallback
-            graphics.fillStyle(0xFFDBAC);
-            graphics.fillRect(28, 16, 8, 8);
-        }
+        const colors = {
+            skin: 0xFFDBAC,
+            hair: 0x8B4513,
+            shirt: 0x4A90E2,
+            pants: 0x2D3748,
+            shoes: 0x654321,
+            belt: 0x8B4513,
+            outline: 0x2C3E50
+        };
+        
+        // Walking animation calculations
+        const walkCycle = frameIndex / 8 * Math.PI * 2;
+        const armSwing = Math.sin(walkCycle) * 8;
+        const legSwing = Math.sin(walkCycle + Math.PI) * 6;
+        const bodyBob = Math.sin(walkCycle * 2) * 1;
+        
+        const centerY = 32 + bodyBob;
+        
+        graphics.lineStyle(2, colors.outline);
+        
+        // Head (with slight bob)
+        graphics.fillStyle(colors.skin);
+        graphics.fillCircle(24, 16 + bodyBob, 8);
+        graphics.strokeCircle(24, 16 + bodyBob, 8);
+        
+        // Hair
+        graphics.fillStyle(colors.hair);
+        graphics.fillEllipse(24, 12 + bodyBob, 14, 8);
+        
+        // Eyes
+        graphics.fillStyle(0x333333);
+        graphics.fillCircle(21, 14 + bodyBob, 1.5);
+        graphics.fillCircle(27, 14 + bodyBob, 1.5);
+        
+        // Body
+        graphics.fillStyle(colors.shirt);
+        graphics.fillRoundedRect(16, 24 + bodyBob, 16, 20, 2);
+        graphics.strokeRoundedRect(16, 24 + bodyBob, 16, 20, 2);
+        
+        // Animated arms
+        const leftArmX = 12 + armSwing * 0.3;
+        const rightArmX = 32 - armSwing * 0.3;
+        
+        graphics.fillStyle(colors.skin);
+        graphics.fillRoundedRect(leftArmX, 26 + bodyBob, 4, 16, 2);
+        graphics.fillRoundedRect(rightArmX, 26 + bodyBob, 4, 16, 2);
+        graphics.strokeRoundedRect(leftArmX, 26 + bodyBob, 4, 16, 2);
+        graphics.strokeRoundedRect(rightArmX, 26 + bodyBob, 4, 16, 2);
+        
+        // Animated legs
+        const leftLegX = 18 + legSwing * 0.4;
+        const rightLegX = 25 - legSwing * 0.4;
+        
+        graphics.fillStyle(colors.pants);
+        graphics.fillRoundedRect(leftLegX, 44 + bodyBob, 5, 16, 2);
+        graphics.fillRoundedRect(rightLegX, 44 + bodyBob, 5, 16, 2);
+        graphics.strokeRoundedRect(leftLegX, 44 + bodyBob, 5, 16, 2);
+        graphics.strokeRoundedRect(rightLegX, 44 + bodyBob, 5, 16, 2);
+        
+        // Animated shoes
+        graphics.fillStyle(colors.shoes);
+        graphics.fillRoundedRect(leftLegX - 2, 60 + bodyBob, 7, 4, 1);
+        graphics.fillRoundedRect(rightLegX - 2, 60 + bodyBob, 7, 4, 1);
+        graphics.strokeRoundedRect(leftLegX - 2, 60 + bodyBob, 7, 4, 1);
+        graphics.strokeRoundedRect(rightLegX - 2, 60 + bodyBob, 7, 4, 1);
         
         rt.draw(graphics, 0, 0);
         rt.saveTexture(`protagonist_walk_${frameIndex}`);
@@ -208,16 +331,59 @@ class PhaserGameManager {
     }
     
     createProtagonistJumpSprite(graphics) {
-        const rt = this.add.renderTexture(0, 0, 64, 64);
+        const rt = this.add.renderTexture(0, 0, 48, 64);
         graphics.clear();
         
-        // Use the new pixel art CharacterAssets system
-        if (this.characterAssets) {
-            console.log('🎨 Using NEW PIXEL ART jumping sprite');
-            this.characterAssets.graphics = graphics;
-            this.characterAssets.drawProtagonistBase(32, 40, 0, false, false);
-            this.characterAssets.addJumpingDetails(32, 40, 'peak');
-        }
+        const colors = {
+            skin: 0xFFDBAC,
+            hair: 0x8B4513,
+            shirt: 0x4A90E2,
+            pants: 0x2D3748,
+            shoes: 0x654321,
+            outline: 0x2C3E50
+        };
+        
+        graphics.lineStyle(2, colors.outline);
+        
+        // Head
+        graphics.fillStyle(colors.skin);
+        graphics.fillCircle(24, 16, 8);
+        graphics.strokeCircle(24, 16, 8);
+        
+        // Hair
+        graphics.fillStyle(colors.hair);
+        graphics.fillEllipse(24, 12, 14, 8);
+        
+        // Eyes (focused expression)
+        graphics.fillStyle(0x333333);
+        graphics.fillCircle(21, 14, 1.5);
+        graphics.fillCircle(27, 14, 1.5);
+        
+        // Body
+        graphics.fillStyle(colors.shirt);
+        graphics.fillRoundedRect(16, 24, 16, 20, 2);
+        graphics.strokeRoundedRect(16, 24, 16, 20, 2);
+        
+        // Arms raised for jumping
+        graphics.fillStyle(colors.skin);
+        graphics.fillRoundedRect(8, 22, 4, 16, 2); // Left arm up
+        graphics.fillRoundedRect(36, 22, 4, 16, 2); // Right arm up
+        graphics.strokeRoundedRect(8, 22, 4, 16, 2);
+        graphics.strokeRoundedRect(36, 22, 4, 16, 2);
+        
+        // Legs tucked up
+        graphics.fillStyle(colors.pants);
+        graphics.fillRoundedRect(18, 40, 5, 12, 2); // Left leg
+        graphics.fillRoundedRect(25, 40, 5, 12, 2); // Right leg
+        graphics.strokeRoundedRect(18, 40, 5, 12, 2);
+        graphics.strokeRoundedRect(25, 40, 5, 12, 2);
+        
+        // Shoes
+        graphics.fillStyle(colors.shoes);
+        graphics.fillRoundedRect(16, 52, 7, 4, 1);
+        graphics.fillRoundedRect(25, 52, 7, 4, 1);
+        graphics.strokeRoundedRect(16, 52, 7, 4, 1);
+        graphics.strokeRoundedRect(25, 52, 7, 4, 1);
         
         rt.draw(graphics, 0, 0);
         rt.saveTexture('protagonist_jump');
@@ -227,31 +393,36 @@ class PhaserGameManager {
     }
     
     createProtagonistClimbSprite(graphics) {
-        const rt = this.add.renderTexture(0, 0, 64, 64);
+        const rt = this.add.renderTexture(0, 0, 48, 64);
         graphics.clear();
         
-        // Use the new pixel art CharacterAssets system
-        if (this.characterAssets) {
-            console.log('🎨 Using NEW PIXEL ART climbing sprite');
-            this.characterAssets.graphics = graphics;
-            this.characterAssets.drawProtagonistBase(32, 40, 0, false, false);
-            this.characterAssets.addClimbingDetails(32, 40, 10);
-        } else {
-            console.warn('⚠️ CharacterAssets not available for climbing sprite');
-            // Simple fallback
-            graphics.fillStyle(0xFFDBAC);
-            graphics.fillRect(28, 16, 8, 8);
-        }
+        const colors = {
+            skin: 0xFFDBAC,
+            hair: 0x8B4513,
+            shirt: 0x4A90E2,
+            pants: 0x2D3748,
+            shoes: 0x654321,
+            outline: 0x2C3E50
+        };
         
-        rt.draw(graphics, 0, 0);
-        rt.saveTexture('protagonist_climb');
+        graphics.lineStyle(2, colors.outline);
         
-        graphics.clear();
-        rt.destroy();
-    }
-    
-    
-    createEnvironmentalAssets() {
+        // Head (looking up)
+        graphics.fillStyle(colors.skin);
+        graphics.fillCircle(24, 18, 8);
+        graphics.strokeCircle(24, 18, 8);
+        
+        // Hair
+        graphics.fillStyle(colors.hair);
+        graphics.fillEllipse(24, 14, 14, 8);
+        
+        // Eyes looking up
+        graphics.fillStyle(0x333333);
+        graphics.fillCircle(21, 16, 1.5);
+        graphics.fillCircle(27, 16, 1.5);
+        
+        // Body (leaning forward)
+        graphics.fillStyle(colors.shirt);
         graphics.fillRoundedRect(14, 26, 16, 18, 2);
         graphics.strokeRoundedRect(14, 26, 16, 18, 2);
         
@@ -633,48 +804,6 @@ class PhaserGameManager {
                 3 + Math.random() * 4,
                 mossColors[Math.floor(Math.random() * mossColors.length)]
             );
-            moss.setAlpha(0.7);
-            moss.setDepth(4);
-        }
-        
-        // Add small stones for detail
-        for (let i = 0; i < 4; i++) {
-            const stone = this.add.circle(
-                platform.x - 70 + Math.random() * 140,
-                platform.y - 15 - Math.random() * 8,
-                1 + Math.random() * 2,
-                0x666666
-            );
-            stone.setAlpha(0.8);
-            stone.setDepth(2);
-        }
-        
-        // Add subtle cracks
-        const graphics = this.add.graphics();
-        graphics.lineStyle(1, 0x333333, 0.6);
-        graphics.lineBetween(
-            platform.x - 70, platform.y - 20,
-            platform.x - 40, platform.y - 15
-        );
-        graphics.lineBetween(
-            platform.x + 30, platform.y - 18,
-            platform.x + 60, platform.y - 22
-        );
-        graphics.setDepth(4);
-    }
-    
-    createPlatformEdgeEffects(platform) {
-        // Add subtle shadow underneath platform
-        const shadow = this.add.ellipse(platform.x, platform.y + 25, 200, 20, 0x000000);
-        shadow.setAlpha(0.3);
-        shadow.setDepth(1);
-        
-        // Add highlight on top edge
-        const highlight = this.add.rectangle(platform.x, platform.y - 22, 180, 2, 0x888888);
-        highlight.setAlpha(0.5);
-        highlight.setDepth(4);
-    }
-    
     createZiplinePlatform() {
         // Create enhanced moveable platform for the zipline puzzle
         this.ziplinePlatform = this.physics.add.sprite(300, 400, 'professional_wood_platform');
@@ -709,6 +838,35 @@ class PhaserGameManager {
                 this.ropeAttachment.setPosition(this.ziplinePlatform.x, this.ziplinePlatform.y - 15);
             }
         });
+    }       );
+            stone.setAlpha(0.8);
+            stone.setDepth(2);
+        }
+        
+        // Add subtle cracks
+        const graphics = this.add.graphics();
+        graphics.lineStyle(1, 0x333333, 0.6);
+        graphics.lineBetween(
+            platform.x - 70, platform.y - 20,
+            platform.x - 40, platform.y - 15
+        );
+        graphics.lineBetween(
+            platform.x + 30, platform.y - 18,
+            platform.x + 60, platform.y - 22
+        );
+        graphics.setDepth(4);
+    }
+    
+    createPlatformEdgeEffects(platform) {
+        // Add subtle shadow underneath platform
+        const shadow = this.add.ellipse(platform.x, platform.y + 25, 200, 20, 0x000000);
+        shadow.setAlpha(0.3);
+        shadow.setDepth(1);
+        
+        // Add highlight on top edge
+        const highlight = this.add.rectangle(platform.x, platform.y - 22, 180, 2, 0x888888);
+        highlight.setAlpha(0.5);
+        highlight.setDepth(4);
     }
     
     createZiplinePlatform() {
