@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double Pendulum Physics Equations</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-bg: #1a1d29;
+            --secondary-bg: #2d3748;
+            --accent-color: #c17817;
+            --text-primary: #f8f6f0;
+            --text-secondary: #a0aec0;
+            --border-color: rgba(248, 246, 240, 0.2);
+            --code-bg: #1e2433;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 29, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 80px auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+        }
+
+        .section {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .section h4 {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .equation-block {
+            background: var(--code-bg);
+            border-left: 4px solid var(--accent-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .equation-block .katex-display {
+            margin: 1rem 0;
+        }
+
+        .note {
+            background: rgba(193, 120, 23, 0.1);
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .note strong {
+            color: var(--accent-color);
+        }
+
+        .parameter-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .parameter-table th,
+        .parameter-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .parameter-table th {
+            background: var(--code-bg);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .parameter-table td:first-child {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-color);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .diagram {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: var(--code-bg);
+            border-radius: 8px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="DoublePend.html" class="nav-brand">Double Pendulum Lab</a>
+        <ul class="nav-links">
+            <li><a href="DoublePend.html" class="nav-link">2D Simulation</a></li>
+            <li><a href="pendulum3d.html" class="nav-link">3D Simulation</a></li>
+            <li><a href="equations.html" class="nav-link">Equations</a></li>
+            <li><a href="analysis.html" class="nav-link">Analysis</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Physics Equations</h1>
+        <p class="subtitle">Mathematical Foundation of the Double Pendulum Simulation</p>
+
+        <a href="DoublePend.html" class="back-button">← Back to Simulation</a>
+
+        <!-- System Overview -->
+        <div class="section">
+            <h2>1. System Overview</h2>
+            <p>
+                A double pendulum consists of two point masses connected by massless, rigid rods. 
+                The system exhibits chaotic behavior and is governed by the laws of classical mechanics.
+            </p>
+
+            <div class="diagram">
+                <svg width="300" height="300" viewBox="0 0 300 300">
+                    <!-- Pivot point -->
+                    <circle cx="150" cy="50" r="4" fill="#c17817"/>
+                    
+                    <!-- First rod -->
+                    <line x1="150" y1="50" x2="200" y2="150" stroke="#f8f6f0" stroke-width="2"/>
+                    
+                    <!-- Second rod -->
+                    <line x1="200" y1="150" x2="230" y2="230" stroke="#f8f6f0" stroke-width="2"/>
+                    
+                    <!-- First mass -->
+                    <circle cx="200" cy="150" r="12" fill="#3b82f6"/>
+                    <text x="215" y="155" fill="#f8f6f0" font-size="14">m₁</text>
+                    
+                    <!-- Second mass -->
+                    <circle cx="230" cy="230" r="12" fill="#10b981"/>
+                    <text x="245" y="235" fill="#f8f6f0" font-size="14">m₂</text>
+                    
+                    <!-- Angle indicators -->
+                    <path d="M 150 80 Q 165 80, 175 100" stroke="#c17817" fill="none" stroke-width="1" stroke-dasharray="2,2"/>
+                    <text x="165" y="95" fill="#c17817" font-size="12">θ₁</text>
+                    
+                    <path d="M 200 175 Q 210 185, 215 200" stroke="#c17817" fill="none" stroke-width="1" stroke-dasharray="2,2"/>
+                    <text x="210" y="195" fill="#c17817" font-size="12">θ₂</text>
+                    
+                    <!-- Length indicators -->
+                    <text x="160" y="100" fill="#a0aec0" font-size="12">L₁</text>
+                    <text x="205" y="190" fill="#a0aec0" font-size="12">L₂</text>
+                </svg>
+            </div>
+
+            <h3>Parameters</h3>
+            <table class="parameter-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Description</th>
+                        <th>Units</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>m₁, m₂</td>
+                        <td>Mass of first and second bob</td>
+                        <td>kg</td>
+                    </tr>
+                    <tr>
+                        <td>L₁, L₂</td>
+                        <td>Length of first and second rod</td>
+                        <td>m</td>
+                    </tr>
+                    <tr>
+                        <td>θ₁, θ₂</td>
+                        <td>Angle from vertical (positive clockwise)</td>
+                        <td>rad</td>
+                    </tr>
+                    <tr>
+                        <td>ω₁, ω₂</td>
+                        <td>Angular velocity</td>
+                        <td>rad/s</td>
+                    </tr>
+                    <tr>
+                        <td>α₁, α₂</td>
+                        <td>Angular acceleration</td>
+                        <td>rad/s²</td>
+                    </tr>
+                    <tr>
+                        <td>g</td>
+                        <td>Gravitational acceleration</td>
+                        <td>m/s²</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Lagrangian Mechanics -->
+        <div class="section">
+            <h2>2. Lagrangian Mechanics</h2>
+            <p>
+                The double pendulum is most elegantly described using Lagrangian mechanics. 
+                The Lagrangian \( \mathcal{L} \) is defined as the difference between kinetic and potential energy:
+            </p>
+
+            <div class="equation-block">
+                $$\mathcal{L} = T - V$$
+            </div>
+
+            <h3>Kinetic Energy (T)</h3>
+            <p>The kinetic energy consists of contributions from both masses:</p>
+
+            <div class="equation-block">
+                $$T = T_1 + T_2$$
+            </div>
+
+            <p>For the first mass:</p>
+            <div class="equation-block">
+                $$T_1 = \frac{1}{2}m_1 v_1^2 = \frac{1}{2}m_1 L_1^2 \dot{\theta}_1^2$$
+            </div>
+
+            <p>For the second mass (which has velocity from both pendulums):</p>
+            <div class="equation-block">
+                $$v_2^2 = L_1^2\dot{\theta}_1^2 + L_2^2\dot{\theta}_2^2 + 2L_1L_2\dot{\theta}_1\dot{\theta}_2\cos(\theta_1 - \theta_2)$$
+            </div>
+
+            <div class="equation-block">
+                $$T_2 = \frac{1}{2}m_2\left(L_1^2\dot{\theta}_1^2 + L_2^2\dot{\theta}_2^2 + 2L_1L_2\dot{\theta}_1\dot{\theta}_2\cos(\theta_1 - \theta_2)\right)$$
+            </div>
+
+            <h3>Potential Energy (V)</h3>
+            <p>Taking the pivot point as the zero reference, the potential energy is:</p>
+
+            <div class="equation-block">
+                $$V = -(m_1 + m_2)gL_1\cos\theta_1 - m_2gL_2\cos\theta_2$$
+            </div>
+
+            <h3>The Lagrangian</h3>
+            <div class="equation-block">
+                $$\mathcal{L} = \frac{1}{2}(m_1 + m_2)L_1^2\dot{\theta}_1^2 + \frac{1}{2}m_2L_2^2\dot{\theta}_2^2 + m_2L_1L_2\dot{\theta}_1\dot{\theta}_2\cos(\theta_1 - \theta_2)$$
+                $$+ (m_1 + m_2)gL_1\cos\theta_1 + m_2gL_2\cos\theta_2$$
+            </div>
+        </div>
+
+        <!-- Equations of Motion -->
+        <div class="section">
+            <h2>3. Equations of Motion</h2>
+            <p>
+                Using the Euler-Lagrange equation:
+            </p>
+
+            <div class="equation-block">
+                $$\frac{d}{dt}\left(\frac{\partial\mathcal{L}}{\partial\dot{\theta}_i}\right) - \frac{\partial\mathcal{L}}{\partial\theta_i} = 0$$
+            </div>
+
+            <p>We derive the coupled differential equations for angular acceleration:</p>
+
+            <h3>Angular Acceleration of First Pendulum (α₁)</h3>
+            <div class="equation-block">
+                $$\alpha_1 = \frac{-g(2m_1 + m_2)\sin\theta_1 - m_2g\sin(\theta_1 - 2\theta_2) - 2\sin(\theta_1-\theta_2)m_2(\dot{\theta}_2^2L_2 + \dot{\theta}_1^2L_1\cos(\theta_1-\theta_2))}{L_1(2m_1 + m_2 - m_2\cos(2(\theta_1-\theta_2)))}$$
+            </div>
+
+            <h3>Angular Acceleration of Second Pendulum (α₂)</h3>
+            <div class="equation-block">
+                $$\alpha_2 = \frac{2\sin(\theta_1-\theta_2)(\dot{\theta}_1^2L_1(m_1+m_2) + g(m_1+m_2)\cos\theta_1 + \dot{\theta}_2^2L_2m_2\cos(\theta_1-\theta_2))}{L_2(2m_1 + m_2 - m_2\cos(2(\theta_1-\theta_2)))}$$
+            </div>
+
+            <div class="note">
+                <strong>Note:</strong> These equations are highly nonlinear and coupled, making analytical solutions impossible for most initial conditions. This nonlinearity is the source of the chaotic behavior.
+            </div>
+        </div>
+
+        <!-- State Space Representation -->
+        <div class="section">
+            <h2>4. State Space Representation</h2>
+            <p>
+                For numerical integration, we express the system as a set of first-order differential equations:
+            </p>
+
+            <div class="equation-block">
+                $$\frac{d\theta_1}{dt} = \omega_1$$
+                $$\frac{d\theta_2}{dt} = \omega_2$$
+                $$\frac{d\omega_1}{dt} = \alpha_1(\theta_1, \theta_2, \omega_1, \omega_2)$$
+                $$\frac{d\omega_2}{dt} = \alpha_2(\theta_1, \theta_2, \omega_1, \omega_2)$$
+            </div>
+
+            <p>
+                The state vector is:
+            </p>
+
+            <div class="equation-block">
+                $$\vec{x} = \begin{bmatrix} \theta_1 \\ \theta_2 \\ \omega_1 \\ \omega_2 \end{bmatrix}$$
+            </div>
+        </div>
+
+        <!-- Runge-Kutta Integration -->
+        <div class="section">
+            <h2>5. Numerical Integration (Runge-Kutta 4th Order)</h2>
+            <p>
+                Due to the chaotic nature of the double pendulum, high-accuracy numerical methods are essential. 
+                We use the 4th-order Runge-Kutta method (RK4):
+            </p>
+
+            <h3>RK4 Algorithm</h3>
+            <p>Given state \( \vec{x}_n \) at time \( t_n \), compute the next state \( \vec{x}_{n+1} \) at time \( t_{n+1} = t_n + h \):</p>
+
+            <div class="equation-block">
+                $$\vec{k}_1 = h \cdot f(\vec{x}_n, t_n)$$
+                $$\vec{k}_2 = h \cdot f(\vec{x}_n + \frac{1}{2}\vec{k}_1, t_n + \frac{h}{2})$$
+                $$\vec{k}_3 = h \cdot f(\vec{x}_n + \frac{1}{2}\vec{k}_2, t_n + \frac{h}{2})$$
+                $$\vec{k}_4 = h \cdot f(\vec{x}_n + \vec{k}_3, t_n + h)$$
+                $$\vec{x}_{n+1} = \vec{x}_n + \frac{1}{6}(\vec{k}_1 + 2\vec{k}_2 + 2\vec{k}_3 + \vec{k}_4)$$
+            </div>
+
+            <p>Where \( f(\vec{x}, t) \) represents our system of differential equations.</p>
+
+            <div class="note">
+                <strong>Implementation Detail:</strong> Our simulation uses a timestep of \( h = 0.005 \) seconds, which provides a good balance between accuracy and computational efficiency.
+            </div>
+        </div>
+
+        <!-- Energy Conservation -->
+        <div class="section">
+            <h2>6. Energy Conservation</h2>
+            <p>
+                In the absence of damping, the total mechanical energy should be conserved.
+            </p>
+
+            <h3>Total Kinetic Energy</h3>
+            <div class="equation-block">
+                $$KE = \frac{1}{2}m_1v_1^2 + \frac{1}{2}m_2v_2^2$$
+            </div>
+
+            <p>Where the velocities in Cartesian coordinates are:</p>
+            <div class="equation-block">
+                $$v_1^2 = L_1^2\omega_1^2$$
+                $$v_2^2 = (L_1\omega_1\cos\theta_1 + L_2\omega_2\cos\theta_2)^2 + (L_1\omega_1\sin\theta_1 + L_2\omega_2\sin\theta_2)^2$$
+            </div>
+
+            <h3>Total Potential Energy</h3>
+            <div class="equation-block">
+                $$PE = m_1gL_1\cos\theta_1 + m_2g(L_1\cos\theta_1 + L_2\cos\theta_2)$$
+            </div>
+
+            <h3>Total Energy</h3>
+            <div class="equation-block">
+                $$E_{total} = KE + PE = \text{constant}$$
+            </div>
+
+            <div class="note">
+                <strong>Energy Check:</strong> A good numerical integration should maintain total energy within a small tolerance (typically < 0.1%). Our simulation monitors this as a validation metric.
+            </div>
+        </div>
+
+        <!-- Chaos Theory -->
+        <div class="section">
+            <h2>7. Chaos and Sensitivity to Initial Conditions</h2>
+            <p>
+                The double pendulum is a classic example of deterministic chaos. The system exhibits extreme sensitivity to initial conditions.
+            </p>
+
+            <h3>Lyapunov Exponent</h3>
+            <p>
+                The rate of divergence between nearby trajectories is characterized by the Lyapunov exponent \( \lambda \):
+            </p>
+
+            <div class="equation-block">
+                $$\lambda = \lim_{t \to \infty} \frac{1}{t} \ln\left(\frac{|\delta\vec{x}(t)|}{|\delta\vec{x}(0)|}\right)$$
+            </div>
+
+            <p>Where \( \delta\vec{x} \) is the separation between two initially nearby trajectories.</p>
+
+            <div class="note">
+                <strong>Chaotic Behavior:</strong> For the double pendulum, \( \lambda > 0 \), indicating exponential divergence. Two pendulums starting with a difference of only 0.001° in initial angle will follow completely different trajectories after just a few seconds.
+            </div>
+        </div>
+
+        <!-- Additional Forces -->
+        <div class="section">
+            <h2>8. Additional Physical Effects</h2>
+
+            <h3>Air Resistance (Drag)</h3>
+            <p>
+                Air resistance is modeled using the drag equation:
+            </p>
+
+            <div class="equation-block">
+                $$F_d = \frac{1}{2}\rho C_d A v^2$$
+            </div>
+
+            <table class="parameter-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Description</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ρ</td>
+                        <td>Air density</td>
+                        <td>1.225 kg/m³</td>
+                    </tr>
+                    <tr>
+                        <td>C<sub>d</sub></td>
+                        <td>Drag coefficient (sphere)</td>
+                        <td>0.44 (turbulent)</td>
+                    </tr>
+                    <tr>
+                        <td>A</td>
+                        <td>Cross-sectional area</td>
+                        <td>πr²</td>
+                    </tr>
+                    <tr>
+                        <td>v</td>
+                        <td>Velocity magnitude</td>
+                        <td>m/s</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Reynolds Number</h3>
+            <p>
+                The Reynolds number determines the flow regime:
+            </p>
+
+            <div class="equation-block">
+                $$Re = \frac{\rho v d}{\mu}$$
+            </div>
+
+            <p>Where \( \mu = 1.81 \times 10^{-5} \) Pa·s is the dynamic viscosity of air.</p>
+
+            <h3>Internal Damping</h3>
+            <p>
+                Material damping is modeled as a torque proportional to angular velocity:
+            </p>
+
+            <div class="equation-block">
+                $$\tau_{damping} = -b\omega$$
+            </div>
+
+            <p>Where \( b \) is the damping coefficient (typically 0.001 for our simulation).</p>
+        </div>
+
+        <!-- Implementation Notes -->
+        <div class="section">
+            <h2>9. Implementation Notes</h2>
+
+            <h3>Coordinate System</h3>
+            <p>
+                Our implementation uses the following conventions:
+            </p>
+            <ul style="margin-left: 2rem;">
+                <li>Angles are measured from the vertical (downward) direction</li>
+                <li>Positive angles rotate clockwise</li>
+                <li>The origin is at the pivot point</li>
+                <li>The y-axis points downward (gravity direction)</li>
+            </ul>
+
+            <h3>Position Calculation</h3>
+            <p>
+                Cartesian coordinates of the masses:
+            </p>
+
+            <div class="equation-block">
+                $$x_1 = L_1\sin\theta_1$$
+                $$y_1 = L_1\cos\theta_1$$
+                $$x_2 = L_1\sin\theta_1 + L_2\sin\theta_2$$
+                $$y_2 = L_1\cos\theta_1 + L_2\cos\theta_2$$
+            </div>
+
+            <h3>Angle Normalization</h3>
+            <p>
+                To keep angles in the range \( [-\pi, \pi] \):
+            </p>
+
+            <div class="equation-block">
+                $$\theta_{normalized} = \text{atan2}(\sin\theta, \cos\theta)$$
+            </div>
+        </div>
+
+        <!-- References -->
+        <div class="section">
+            <h2>10. References and Further Reading</h2>
+            <ul style="margin-left: 2rem; line-height: 2;">
+                <li>Goldstein, H., Poole, C., & Safko, J. (2001). <em>Classical Mechanics</em> (3rd ed.). Addison Wesley.</li>
+                <li>Strogatz, S. H. (2015). <em>Nonlinear Dynamics and Chaos</em> (2nd ed.). Westview Press.</li>
+                <li>Gleick, J. (1987). <em>Chaos: Making a New Science</em>. Viking.</li>
+                <li>Levien, R. B., & Tan, S. M. (1993). Double Pendulum: An experiment in chaos. <em>American Journal of Physics</em>, 61(11), 1038-1044.</li>
+                <li>Wikipedia: <a href="https://en.wikipedia.org/wiki/Double_pendulum" target="_blank" style="color: var(--accent-color);">Double Pendulum</a></li>
+            </ul>
+        </div>
+
+        <a href="DoublePend.html" class="back-button">← Back to Simulation</a>
+    </div>
+
+    <script>
+        // Render all math equations when page loads
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: "$$", right: "$$", display: true},
+                    {left: "\\[", right: "\\]", display: true},
+                    {left: "$", right: "$", display: false},
+                    {left: "\\(", right: "\\)", display: false}
+                ],
+                throwOnError: false
+            });
+        });
+    </script>
+</body>
+</html>

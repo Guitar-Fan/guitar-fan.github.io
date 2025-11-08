@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Simulation Lab - Double Pendulum</title>
+    <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            height: fit-content;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2a5298;
+        }
+        
+        .control-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .visualization {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 600px;
+            background: #fafafa;
+            border-radius: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+        
+        .tab-content {
+            padding: 20px;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2a5298;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .info-box h3 {
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .energy-display {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2a5298;
+            margin-top: 5px;
+        }
+        
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 Physics Simulation Laboratory</h1>
+            <p class="subtitle">Chaotic Double Pendulum with Accurate Lagrangian Mechanics</p>
+        </header>
+        
+        <div class="content">
+            <div class="controls">
+                <h2 style="margin-bottom: 20px; color: #2a5298;">Simulation Parameters</h2>
+                
+                <div class="control-group">
+                    <label>Initial Angle θ₁ (degrees)</label>
+                    <input type="number" id="theta1" value="90" step="1">
+                    <div class="input-hint">Angle of first pendulum from vertical</div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Initial Angle θ₂ (degrees)</label>
+                    <input type="number" id="theta2" value="90" step="1">
+                    <div class="input-hint">Angle of second pendulum from vertical</div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Mass m₁ (kg)</label>
+                    <input type="number" id="m1" value="1.0" step="0.1" min="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>Mass m₂ (kg)</label>
+                    <input type="number" id="m2" value="1.0" step="0.1" min="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>Length L₁ (m)</label>
+                    <input type="number" id="L1" value="1.0" step="0.1" min="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>Length L₂ (m)</label>
+                    <input type="number" id="L2" value="1.0" step="0.1" min="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>Duration (seconds)</label>
+                    <input type="number" id="duration" value="20" step="1" min="1">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-primary" onclick="runSimulation()">▶ Simulate</button>
+                    <button class="btn-secondary" onclick="showChaos()">🌀 Chaos Demo</button>
+                </div>
+                
+                <div id="loading">
+                    <div class="spinner"></div>
+                    <p>Calculating physics...</p>
+                </div>
+                
+                <div class="info-box">
+                    <h3>About This Simulation</h3>
+                    <p>
+                        This double pendulum uses the <strong>Lagrangian formulation</strong> of classical mechanics 
+                        to solve the equations of motion. The system exhibits chaotic behavior, where tiny changes 
+                        in initial conditions lead to dramatically different outcomes.
+                    </p>
+                </div>
+                
+                <div class="stats" id="stats" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-label">Frame</div>
+                        <div class="stat-value" id="currentFrame">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Time (s)</div>
+                        <div class="stat-value" id="currentTime">0.00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('animation')">Animation</div>
+                    <div class="tab" onclick="switchTab('phase')">Phase Space</div>
+                    <div class="tab" onclick="switchTab('energy')">Energy Plot</div>
+                </div>
+                
+                <div class="tab-content">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let simulationData = null;
+        let animationFrame = 0;
+        let animationId = null;
+        let currentTab = 'animation';
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = 600;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (simulationData) {
+                if (tab === 'animation') {
+                    startAnimation();
+                } else {
+                    stopAnimation();
+                    if (tab === 'phase') drawPhaseSpace();
+                    else if (tab === 'energy') drawEnergyPlot();
+                }
+            }
+        }
+        
+        async function runSimulation() {
+            const params = {
+                theta1: parseFloat(document.getElementById('theta1').value),
+                theta2: parseFloat(document.getElementById('theta2').value),
+                m1: parseFloat(document.getElementById('m1').value),
+                m2: parseFloat(document.getElementById('m2').value),
+                L1: parseFloat(document.getElementById('L1').value),
+                L2: parseFloat(document.getElementById('L2').value),
+                duration: parseFloat(document.getElementById('duration').value),
+                dt: 0.01
+            };
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('stats').style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    simulationData = result.data;
+                    animationFrame = 0;
+                    document.getElementById('stats').style.display = 'grid';
+                    
+                    if (currentTab === 'animation') {
+                        startAnimation();
+                    } else if (currentTab === 'phase') {
+                        drawPhaseSpace();
+                    } else if (currentTab === 'energy') {
+                        drawEnergyPlot();
+                    }
+                } else {
+                    alert('Simulation error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        async function showChaos() {
+            const params = {
+                theta1: parseFloat(document.getElementById('theta1').value),
+                theta2: parseFloat(document.getElementById('theta2').value),
+                m1: parseFloat(document.getElementById('m1').value),
+                m2: parseFloat(document.getElementById('m2').value),
+                L1: parseFloat(document.getElementById('L1').value),
+                L2: parseFloat(document.getElementById('L2').value),
+                duration: parseFloat(document.getElementById('duration').value),
+                perturbation: 0.01
+            };
+            
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    drawChaosComparison(result.simulations);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        function startAnimation() {
+            stopAnimation();
+            animate();
+        }
+        
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+        
+        function animate() {
+            if (!simulationData || currentTab !== 'animation') return;
+            
+            const data = simulationData;
+            const frame = animationFrame % data.x1.length;
+            
+            // Clear canvas
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Set up coordinate system
+            const centerX = canvas.width / 2;
+            const centerY = 150;
+            const scale = Math.min(canvas.width, canvas.height) * 0.15;
+            
+            // Draw grid
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = -3; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX + i * scale, 0);
+                ctx.lineTo(centerX + i * scale, canvas.height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, centerY + i * scale);
+                ctx.lineTo(canvas.width, centerY + i * scale);
+                ctx.stroke();
+            }
+            
+            // Draw trace
+            ctx.strokeStyle = 'rgba(102, 126, 234, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const traceStart = Math.max(0, frame - 100);
+            for (let i = traceStart; i < frame; i++) {
+                const x = centerX + data.x2[i] * scale;
+                const y = centerY + data.y2[i] * scale;
+                if (i === traceStart) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Draw pendulum
+            const x1 = centerX + data.x1[frame] * scale;
+            const y1 = centerY + data.y1[frame] * scale;
+            const x2 = centerX + data.x2[frame] * scale;
+            const y2 = centerY + data.y2[frame] * scale;
+            
+            // Rod 1
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+            
+            // Rod 2
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            // Pivot
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Bob 1
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(x1, y1, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Bob 2
+            ctx.fillStyle = '#764ba2';
+            ctx.beginPath();
+            ctx.arc(x2, y2, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Update stats
+            document.getElementById('currentFrame').textContent = frame;
+            document.getElementById('currentTime').textContent = data.time[frame].toFixed(2);
+            
+            animationFrame++;
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        function drawPhaseSpace() {
+            if (!simulationData) return;
+            
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const data = simulationData;
+            const margin = 60;
+            const plotWidth = canvas.width - 2 * margin;
+            const plotHeight = canvas.height - 2 * margin;
+            
+            // Find ranges
+            const theta1Range = [Math.min(...data.theta1), Math.max(...data.theta1)];
+            const theta2Range = [Math.min(...data.theta2), Math.max(...data.theta2)];
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(margin, margin);
+            ctx.lineTo(margin, canvas.height - margin);
+            ctx.lineTo(canvas.width - margin, canvas.height - margin);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('θ₁ (rad)', canvas.width / 2, canvas.height - 20);
+            ctx.save();
+            ctx.translate(20, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('θ₂ (rad)', 0, 0);
+            ctx.restore();
+            
+            // Plot phase space trajectory
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 0; i < data.theta1.length; i++) {
+                const x = margin + ((data.theta1[i] - theta1Range[0]) / (theta1Range[1] - theta1Range[0])) * plotWidth;
+                const y = canvas.height - margin - ((data.theta2[i] - theta2Range[0]) / (theta2Range[1] - theta2Range[0])) * plotHeight;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Start point
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            const startX = margin + ((data.theta1[0] - theta1Range[0]) / (theta1Range[1] - theta1Range[0])) * plotWidth;
+            const startY = canvas.height - margin - ((data.theta2[0] - theta2Range[0]) / (theta2Range[1] - theta2Range[0])) * plotHeight;
+            ctx.arc(startX, startY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        function drawEnergyPlot() {
+            if (!simulationData) return;
+            
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const data = simulationData;
+            const margin = 60;
+            const plotWidth = canvas.width - 2 * margin;
+            const plotHeight = canvas.height - 2 * margin;
+            
+            // Find energy range
+            const energyRange = [Math.min(...data.energy), Math.max(...data.energy)];
+            const timeRange = [0, data.time[data.time.length - 1]];
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(margin, margin);
+            ctx.lineTo(margin, canvas.height - margin);
+            ctx.lineTo(canvas.width - margin, canvas.height - margin);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Time (s)', canvas.width / 2, canvas.height - 20);
+            ctx.save();
+            ctx.translate(20, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Total Energy (J)', 0, 0);
+            ctx.restore();
+            
+            // Plot energy
+            ctx.strokeStyle = '#ffc107';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < data.energy.length; i++) {
+                const x = margin + (data.time[i] / timeRange[1]) * plotWidth;
+                const y = canvas.height - margin - ((data.energy[i] - energyRange[0]) / (energyRange[1] - energyRange[0] || 1)) * plotHeight;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Energy conservation info
+            const energyVariation = ((energyRange[1] - energyRange[0]) / Math.abs(data.energy[0]) * 100).toFixed(4);
+            ctx.fillStyle = '#333';
+            ctx.font = '14px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Energy variation: ${energyVariation}%`, margin, margin - 20);
+        }
+        
+        function drawChaosComparison(simulations) {
+            stopAnimation();
+            
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const colors = ['#667eea', '#ff6b6b', '#4ecdc4'];
+            const centerX = canvas.width / 2;
+            const centerY = 150;
+            const scale = Math.min(canvas.width, canvas.height) * 0.15;
+            
+            // Draw all three trajectories
+            simulations.forEach((sim, idx) => {
+                const data = sim.data;
+                
+                ctx.strokeStyle = colors[idx];
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                
+                for (let i = 0; i < data.x2.length; i++) {
+                    const x = centerX + data.x2[i] * scale;
+                    const y = centerY + data.y2[i] * scale;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+            
+            ctx.globalAlpha = 1;
+            
+            // Legend
+            ctx.font = '14px sans-serif';
+            simulations.forEach((sim, idx) => {
+                ctx.fillStyle = colors[idx];
+                ctx.fillRect(20, 20 + idx * 30, 20, 20);
+                ctx.fillStyle = '#333';
+                ctx.fillText(`Δθ = ${sim.delta.toFixed(3)}°`, 50, 35 + idx * 30);
+            });
+            
+            // Title
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText('Chaotic Sensitivity to Initial Conditions', 20, canvas.height - 20);
+        }
+    </script>
+</body>
+</html>

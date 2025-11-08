@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Tools - Double Pendulum</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Core Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-bg: #1a1d29;
+            --secondary-bg: #2d3748;
+            --accent-color: #c17817;
+            --text-primary: #f8f6f0;
+            --text-secondary: #a0aec0;
+            --control-bg: rgba(45, 55, 72, 0.9);
+            --border-color: rgba(248, 246, 240, 0.2);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 29, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent-color);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 80px;
+            padding: 2rem;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .control-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: var(--secondary-bg);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .control-group select {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(193, 120, 23, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .chart-container h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-unit {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Export Section */
+        .export-section {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .export-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="DoublePend.html" class="nav-brand">Double Pendulum Lab</a>
+        <ul class="nav-links">
+            <li><a href="DoublePend.html" class="nav-link">2D Simulation</a></li>
+            <li><a href="pendulum3d.html" class="nav-link">3D Simulation</a></li>
+            <li><a href="equations.html" class="nav-link">Equations</a></li>
+            <li><a href="analysis.html" class="nav-link active">Analysis</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Physics Analysis Tools</h1>
+            <p>Run parametric studies, analyze energy conservation, study chaos sensitivity, and explore the double pendulum's behavior across different configurations.</p>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-grid">
+                <div class="control-section">
+                    <h3>Simulation Parameters</h3>
+                    <div class="control-group">
+                        <label>Mass Ratio (m₂/m₁): <span id="mass-ratio-value">1.00</span></label>
+                        <input type="range" id="mass-ratio" min="0.1" max="5.0" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <label>Length Ratio (L₂/L₁): <span id="length-ratio-value">1.00</span></label>
+                        <input type="range" id="length-ratio" min="0.1" max="5.0" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <label>Initial Angle θ₁ (°): <span id="theta1-value">90</span></label>
+                        <input type="range" id="theta1" min="-180" max="180" step="5" value="90">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Analysis Settings</h3>
+                    <div class="control-group">
+                        <label>Simulation Duration (s): <span id="duration-value">20</span></label>
+                        <input type="range" id="duration" min="5" max="60" step="5" value="20">
+                    </div>
+                    <div class="control-group">
+                        <label>Analysis Type</label>
+                        <select id="analysis-type">
+                            <option value="energy">Energy Conservation</option>
+                            <option value="chaos">Chaos Sensitivity</option>
+                            <option value="frequency">Frequency Analysis</option>
+                            <option value="parametric">Parametric Study</option>
+                        </select>
+                    </div>
+                    <button class="btn" id="run-analysis">Run Analysis</button>
+                </div>
+
+                <div class="control-section">
+                    <h3>Quick Presets</h3>
+                    <button class="btn" onclick="loadAnalysisPreset('equal-mass')">Equal Mass</button>
+                    <button class="btn" onclick="loadAnalysisPreset('heavy-bottom')">Heavy Bottom</button>
+                    <button class="btn" onclick="loadAnalysisPreset('chaotic')">Chaotic</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Max Energy Error</div>
+                <div class="stat-value" id="energy-error">0.00</div>
+                <div class="stat-unit">%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Angular Velocity</div>
+                <div class="stat-value" id="avg-omega">0.00</div>
+                <div class="stat-unit">rad/s</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Max Angle</div>
+                <div class="stat-value" id="max-angle">0</div>
+                <div class="stat-unit">°</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Period (approx)</div>
+                <div class="stat-value" id="period">0.00</div>
+                <div class="stat-unit">s</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3>Energy Over Time</h3>
+                <div id="energy-chart" class="chart"></div>
+            </div>
+            <div class="chart-container">
+                <h3>Phase Space Diagram</h3>
+                <div id="phase-chart" class="chart"></div>
+            </div>
+            <div class="chart-container">
+                <h3>Angular Position History</h3>
+                <div id="position-chart" class="chart"></div>
+            </div>
+            <div class="chart-container">
+                <h3>Poincaré Section</h3>
+                <div id="poincare-chart" class="chart"></div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="export-section">
+            <h3>Export Data</h3>
+            <div class="export-buttons">
+                <button class="export-btn" onclick="exportCSV()">📊 Export CSV</button>
+                <button class="export-btn" onclick="exportJSON()">📄 Export JSON</button>
+                <button class="export-btn" onclick="exportCharts()">📈 Export Charts (PNG)</button>
+                <button class="export-btn" onclick="generateReport()">📋 Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Physics Engine -->
+    <script src="physics.js"></script>
+    
+    <!-- Analysis Script -->
+    <script>
+        let physics = null;
+        let charts = {};
+        let analysisData = {
+            time: [],
+            theta1: [],
+            theta2: [],
+            omega1: [],
+            omega2: [],
+            energy: []
+        };
+
+        // Initialize physics engine
+        function initPhysics() {
+            physics = new DoublePendulumPhysics();
+            initCharts();
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Energy Chart
+            charts.energy = echarts.init(document.getElementById('energy-chart'));
+            charts.energy.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis' },
+                legend: {
+                    data: ['Kinetic', 'Potential', 'Total'],
+                    textStyle: { color: '#a0aec0' }
+                },
+                grid: { left: '10%', right: '10%', bottom: '15%', top: '15%' },
+                xAxis: {
+                    type: 'value',
+                    name: 'Time (s)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Energy (J)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                series: [
+                    { name: 'Kinetic', type: 'line', data: [], smooth: true, lineStyle: { color: '#10b981' } },
+                    { name: 'Potential', type: 'line', data: [], smooth: true, lineStyle: { color: '#3b82f6' } },
+                    { name: 'Total', type: 'line', data: [], smooth: true, lineStyle: { color: '#c17817' } }
+                ]
+            });
+
+            // Phase Space Chart
+            charts.phase = echarts.init(document.getElementById('phase-chart'));
+            charts.phase.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'item' },
+                grid: { left: '15%', right: '10%', bottom: '15%', top: '10%' },
+                xAxis: {
+                    type: 'value',
+                    name: 'θ₁ (rad)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'ω₁ (rad/s)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                series: [{
+                    type: 'scatter',
+                    data: [],
+                    symbolSize: 2,
+                    itemStyle: { color: '#c17817', opacity: 0.6 }
+                }]
+            });
+
+            // Position Chart
+            charts.position = echarts.init(document.getElementById('position-chart'));
+            charts.position.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis' },
+                legend: {
+                    data: ['θ₁', 'θ₂'],
+                    textStyle: { color: '#a0aec0' }
+                },
+                grid: { left: '10%', right: '10%', bottom: '15%', top: '15%' },
+                xAxis: {
+                    type: 'value',
+                    name: 'Time (s)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Angle (rad)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                series: [
+                    { name: 'θ₁', type: 'line', data: [], smooth: true, lineStyle: { color: '#10b981' }, showSymbol: false },
+                    { name: 'θ₂', type: 'line', data: [], smooth: true, lineStyle: { color: '#3b82f6' }, showSymbol: false }
+                ]
+            });
+
+            // Poincaré Section
+            charts.poincare = echarts.init(document.getElementById('poincare-chart'));
+            charts.poincare.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'item' },
+                grid: { left: '15%', right: '10%', bottom: '15%', top: '10%' },
+                xAxis: {
+                    type: 'value',
+                    name: 'θ₂ (rad)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'ω₂ (rad/s)',
+                    nameTextStyle: { color: '#a0aec0' },
+                    axisLine: { lineStyle: { color: '#a0aec0' } }
+                },
+                series: [{
+                    type: 'scatter',
+                    data: [],
+                    symbolSize: 3,
+                    itemStyle: { color: '#c17817', opacity: 0.7 }
+                }]
+            });
+        }
+
+        // Run analysis
+        async function runAnalysis() {
+            const btn = document.getElementById('run-analysis');
+            btn.disabled = true;
+            btn.textContent = 'Running Analysis...';
+
+            // Clear previous data
+            analysisData = {
+                time: [],
+                theta1: [],
+                theta2: [],
+                omega1: [],
+                omega2: [],
+                energy: []
+            };
+
+            // Get parameters
+            const massRatio = parseFloat(document.getElementById('mass-ratio').value);
+            const lengthRatio = parseFloat(document.getElementById('length-ratio').value);
+            const theta1 = parseFloat(document.getElementById('theta1').value) * Math.PI / 180;
+            const duration = parseInt(document.getElementById('duration').value);
+
+            // Setup physics
+            physics.m1 = 1.0;
+            physics.m2 = massRatio;
+            physics.l1 = 1.0;
+            physics.l2 = lengthRatio;
+            physics.reset(theta1, theta1, 0, 0);
+
+            // Run simulation
+            const steps = duration / physics.timeStep;
+            for (let i = 0; i < steps; i++) {
+                physics.rungeKuttaStep();
+                
+                if (i % 10 === 0) {  // Sample every 10 steps
+                    const energy = physics.calculateEnergy();
+                    analysisData.time.push(physics.time);
+                    analysisData.theta1.push(physics.theta1);
+                    analysisData.theta2.push(physics.theta2);
+                    analysisData.omega1.push(physics.omega1);
+                    analysisData.omega2.push(physics.omega2);
+                    analysisData.energy.push(energy);
+                }
+            }
+
+            updateCharts();
+            updateStatistics();
+
+            btn.disabled = false;
+            btn.textContent = 'Run Analysis';
+        }
+
+        // Update charts with data
+        function updateCharts() {
+            const timeData = analysisData.time;
+            
+            // Energy chart
+            const kineticData = timeData.map((t, i) => [t, analysisData.energy[i].kinetic]);
+            const potentialData = timeData.map((t, i) => [t, analysisData.energy[i].potential]);
+            const totalData = timeData.map((t, i) => [t, analysisData.energy[i].total]);
+            
+            charts.energy.setOption({
+                series: [
+                    { data: kineticData },
+                    { data: potentialData },
+                    { data: totalData }
+                ]
+            });
+
+            // Phase space
+            const phaseData = analysisData.theta1.map((th, i) => [th, analysisData.omega1[i]]);
+            charts.phase.setOption({
+                series: [{ data: phaseData }]
+            });
+
+            // Position
+            const theta1Data = timeData.map((t, i) => [t, analysisData.theta1[i]]);
+            const theta2Data = timeData.map((t, i) => [t, analysisData.theta2[i]]);
+            charts.position.setOption({
+                series: [
+                    { data: theta1Data },
+                    { data: theta2Data }
+                ]
+            });
+
+            // Poincaré section (sample when omega1 crosses zero)
+            const poincareData = [];
+            for (let i = 1; i < analysisData.omega1.length; i++) {
+                if (analysisData.omega1[i-1] < 0 && analysisData.omega1[i] >= 0) {
+                    poincareData.push([analysisData.theta2[i], analysisData.omega2[i]]);
+                }
+            }
+            charts.poincare.setOption({
+                series: [{ data: poincareData }]
+            });
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            // Energy error
+            const totalEnergies = analysisData.energy.map(e => e.total);
+            const avgEnergy = totalEnergies.reduce((a, b) => a + b, 0) / totalEnergies.length;
+            const maxError = Math.max(...totalEnergies.map(e => Math.abs(e - avgEnergy) / avgEnergy * 100));
+            document.getElementById('energy-error').textContent = maxError.toFixed(2);
+
+            // Average angular velocity
+            const avgOmega = analysisData.omega1.reduce((a, b) => a + Math.abs(b), 0) / analysisData.omega1.length;
+            document.getElementById('avg-omega').textContent = avgOmega.toFixed(2);
+
+            // Max angle
+            const maxAngle = Math.max(...analysisData.theta1.map(Math.abs)) * 180 / Math.PI;
+            document.getElementById('max-angle').textContent = Math.round(maxAngle);
+
+            // Approximate period
+            let crossings = 0;
+            for (let i = 1; i < analysisData.theta1.length; i++) {
+                if (analysisData.theta1[i-1] < 0 && analysisData.theta1[i] >= 0) crossings++;
+            }
+            const period = crossings > 0 ? (analysisData.time[analysisData.time.length - 1] / crossings * 2) : 0;
+            document.getElementById('period').textContent = period.toFixed(2);
+        }
+
+        // Presets
+        function loadAnalysisPreset(preset) {
+            switch(preset) {
+                case 'equal-mass':
+                    document.getElementById('mass-ratio').value = 1.0;
+                    document.getElementById('length-ratio').value = 1.0;
+                    document.getElementById('theta1').value = 90;
+                    break;
+                case 'heavy-bottom':
+                    document.getElementById('mass-ratio').value = 3.0;
+                    document.getElementById('length-ratio').value = 1.0;
+                    document.getElementById('theta1').value = 120;
+                    break;
+                case 'chaotic':
+                    document.getElementById('mass-ratio').value = 1.0;
+                    document.getElementById('length-ratio').value = 1.0;
+                    document.getElementById('theta1').value = 135;
+                    break;
+            }
+            updateSliderValues();
+        }
+
+        // Update slider value displays
+        function updateSliderValues() {
+            document.getElementById('mass-ratio-value').textContent = document.getElementById('mass-ratio').value;
+            document.getElementById('length-ratio-value').textContent = document.getElementById('length-ratio').value;
+            document.getElementById('theta1-value').textContent = document.getElementById('theta1').value;
+            document.getElementById('duration-value').textContent = document.getElementById('duration').value;
+        }
+
+        // Export functions
+        function exportCSV() {
+            let csv = 'Time,Theta1,Theta2,Omega1,Omega2,KineticEnergy,PotentialEnergy,TotalEnergy\n';
+            for (let i = 0; i < analysisData.time.length; i++) {
+                csv += `${analysisData.time[i]},${analysisData.theta1[i]},${analysisData.theta2[i]},`;
+                csv += `${analysisData.omega1[i]},${analysisData.omega2[i]},`;
+                csv += `${analysisData.energy[i].kinetic},${analysisData.energy[i].potential},${analysisData.energy[i].total}\n`;
+            }
+            downloadFile(csv, 'pendulum-analysis.csv', 'text/csv');
+        }
+
+        function exportJSON() {
+            const json = JSON.stringify(analysisData, null, 2);
+            downloadFile(json, 'pendulum-analysis.json', 'application/json');
+        }
+
+        function exportCharts() {
+            alert('Chart export feature coming soon! Use browser screenshot tools for now.');
+        }
+
+        function generateReport() {
+            alert('Report generation feature coming soon!');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Event listeners
+        document.getElementById('run-analysis').addEventListener('click', runAnalysis);
+        ['mass-ratio', 'length-ratio', 'theta1', 'duration'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateSliderValues);
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            initPhysics();
+            updateSliderValues();
+        });
+
+        // Resize charts on window resize
+        window.addEventListener('resize', () => {
+            Object.values(charts).forEach(chart => chart.resize());
+        });
+    </script>
+</body>
+</html>

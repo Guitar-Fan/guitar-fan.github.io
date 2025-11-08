@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double Pendulum: Practical Applications Lab</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js and Ammo.js Physics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ammojs@0.0.2/ammo.js"></script>
+    
+    <!-- Animation and UI Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-bg: #0a0e1a;
+            --secondary-bg: #1a2332;
+            --accent-color: #00d4ff;
+            --accent-secondary: #ff6b6b;
+            --text-primary: #ffffff;
+            --text-secondary: #b3c5d1;
+            --success-color: #4ecdc4;
+            --warning-color: #feca57;
+            --error-color: #ff6b6b;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, #0f1419 50%, #1a0f2e 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--accent-color), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 320px 1fr 300px;
+            height: 100vh;
+            padding-top: 70px;
+        }
+
+        /* Application Selector */
+        .app-selector {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .app-selector h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .application-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .application-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .application-card:hover::before {
+            left: 100%;
+        }
+
+        .application-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.15);
+        }
+
+        .application-card.active {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, var(--secondary-bg), rgba(0, 212, 255, 0.1));
+        }
+
+        .app-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .app-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .app-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* 3D Viewport */
+        .viewport {
+            position: relative;
+            background: radial-gradient(circle at center, #0f1419 0%, var(--primary-bg) 100%);
+            overflow: hidden;
+        }
+
+        #threejs-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .viewport-overlay {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 1rem;
+            max-width: 300px;
+        }
+
+        .overlay-title {
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .overlay-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .control-slider {
+            width: 100%;
+            height: 6px;
+            background: var(--secondary-bg);
+            border-radius: 3px;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, var(--secondary-bg), #2a3441);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .control-btn:hover {
+            background: linear-gradient(135deg, var(--accent-color), #0099cc);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, var(--accent-color), #0099cc);
+        }
+
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .param-input {
+            background: var(--secondary-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .param-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+        }
+
+        /* Data Visualization */
+        .data-viz {
+            background: var(--secondary-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            height: 150px;
+            position: relative;
+        }
+
+        .data-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .data-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.8); }
+        }
+
+        .glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--secondary-bg);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 280px 1fr 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            
+            .app-selector, .control-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">🔬 Practical Pendulum Lab</div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="DoublePend.html" class="nav-link">2D Simulation</a></li>
+                <li><a href="pendulum3d.html" class="nav-link">3D Physics</a></li>
+                <li><a href="analysis.html" class="nav-link">Analysis</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Application Selector -->
+        <div class="app-selector">
+            <h3>🎯 Real-World Applications</h3>
+            
+            <div class="application-card active" data-app="golf">
+                <div class="app-icon">⛳</div>
+                <div class="app-title">Golf Swing Dynamics</div>
+                <div class="app-description">Analyze the double pendulum motion in golf swing biomechanics and club-ball interaction.</div>
+            </div>
+            
+            <div class="application-card" data-app="tennis">
+                <div class="app-icon">🎾</div>
+                <div class="app-title">Tennis Racket Physics</div>
+                <div class="app-description">Study the arm-racket system as a double pendulum for optimal power and accuracy.</div>
+            </div>
+            
+            <div class="application-card" data-app="robotics">
+                <div class="app-icon">🤖</div>
+                <div class="app-title">Robot Arm Control</div>
+                <div class="app-description">Simulate 2-DOF robotic manipulator with joint dynamics and trajectory planning.</div>
+            </div>
+            
+            <div class="application-card" data-app="walking">
+                <div class="app-icon">🚶</div>
+                <div class="app-title">Human Gait Analysis</div>
+                <div class="app-description">Model leg motion during walking as a double pendulum for biomechanical studies.</div>
+            </div>
+            
+            <div class="application-card" data-app="energy">
+                <div class="app-icon">⚡</div>
+                <div class="app-title">Energy Harvesting</div>
+                <div class="app-description">Demonstrate energy capture from chaotic pendulum motion for renewable systems.</div>
+            </div>
+            
+            <div class="application-card" data-app="seismic">
+                <div class="app-icon">🏢</div>
+                <div class="app-title">Seismic Damping</div>
+                <div class="app-description">Building vibration analysis and earthquake resistance design principles.</div>
+            </div>
+            
+            <div class="application-card" data-app="chaos">
+                <div class="app-icon">🌪️</div>
+                <div class="app-title">Chaos Theory Demo</div>
+                <div class="app-description">Educational demonstration of sensitive dependence on initial conditions.</div>
+            </div>
+        </div>
+
+        <!-- 3D Viewport -->
+        <div class="viewport">
+            <div id="threejs-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Initializing Physics Engine...
+                </div>
+            </div>
+            
+            <div class="viewport-overlay">
+                <div class="overlay-title" id="overlay-title">Golf Swing Dynamics</div>
+                <div class="overlay-description" id="overlay-description">
+                    This simulation models the golf swing as a double pendulum system, where the golfer's body and arms form the first pendulum, and the club forms the second. The chaotic nature helps explain timing sensitivity and power generation.
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-section">
+                <h4>🎮 Simulation Control</h4>
+                <button class="control-btn" id="play-pause-btn">▶️ Play</button>
+                <button class="control-btn" id="reset-btn">🔄 Reset</button>
+                <button class="control-btn" id="record-btn">📹 Record</button>
+            </div>
+
+            <div class="control-section">
+                <h4>⚙️ Physics Parameters</h4>
+                <div class="control-group">
+                    <label>Upper Mass: <span id="mass1-value">2.0</span> kg</label>
+                    <input type="range" class="control-slider" id="mass1-slider" min="0.5" max="10" step="0.1" value="2.0">
+                </div>
+                <div class="control-group">
+                    <label>Lower Mass: <span id="mass2-value">1.0</span> kg</label>
+                    <input type="range" class="control-slider" id="mass2-slider" min="0.1" max="5" step="0.1" value="1.0">
+                </div>
+                <div class="control-group">
+                    <label>Upper Length: <span id="length1-value">1.2</span> m</label>
+                    <input type="range" class="control-slider" id="length1-slider" min="0.3" max="3" step="0.1" value="1.2">
+                </div>
+                <div class="control-group">
+                    <label>Lower Length: <span id="length2-value">1.0</span> m</label>
+                    <input type="range" class="control-slider" id="length2-slider" min="0.2" max="2" step="0.1" value="1.0">
+                </div>
+                <div class="control-group">
+                    <label>Damping: <span id="damping-value">0.1</span></label>
+                    <input type="range" class="control-slider" id="damping-slider" min="0" max="1" step="0.01" value="0.1">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h4>🎯 Application Settings</h4>
+                <div class="parameter-grid">
+                    <input type="number" class="param-input" id="param1" placeholder="Param 1">
+                    <input type="number" class="param-input" id="param2" placeholder="Param 2">
+                </div>
+                <button class="control-btn" id="optimize-btn">🎯 Optimize</button>
+                <button class="control-btn" id="analyze-btn">📊 Analyze</button>
+            </div>
+
+            <div class="control-section">
+                <h4>📊 Real-time Data</h4>
+                <div class="data-viz">
+                    <div class="data-title">Energy (Joules)</div>
+                    <div class="data-value" id="energy-display">0.00</div>
+                </div>
+                <div class="data-viz">
+                    <div class="data-title">Angular Velocity (rad/s)</div>
+                    <div class="data-value" id="velocity-display">0.00</div>
+                </div>
+                <div class="data-viz">
+                    <div class="data-title">Efficiency (%)</div>
+                    <div class="data-value" id="efficiency-display">0.0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the main application script -->
+    <script src="practical-pendulum.js"></script>
+</body>
+</html>

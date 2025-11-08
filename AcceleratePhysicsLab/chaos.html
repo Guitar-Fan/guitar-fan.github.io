@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaos Theory - Double Pendulum</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Core Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary-bg: #1a1d29;
+            --secondary-bg: #2d3748;
+            --accent-color: #c17817;
+            --text-primary: #f8f6f0;
+            --text-secondary: #a0aec0;
+            --control-bg: rgba(45, 55, 72, 0.9);
+            --border-color: rgba(248, 246, 240, 0.2);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 29, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+
+        .nav-link.active {
+            color: var(--accent-color);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 60px;
+            padding: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Chaos Demonstration */
+        .chaos-demo {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .demo-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--accent-color);
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .demo-btn {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .demo-btn:hover, .demo-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .chaos-canvas-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chaos-canvas {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 400px;
+            position: relative;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: var(--control-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 10;
+        }
+
+        /* Chaos Analysis */
+        .chaos-analysis {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .analysis-card {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .analysis-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .analysis-content {
+            min-height: 200px;
+        }
+
+        /* Educational Content */
+        .educational-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .content-card {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .content-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .content-card p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .content-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .content-card li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .content-card li::before {
+            content: '→';
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        /* Interactive Elements */
+        .interactive-demo {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .sensitivity-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .sensitivity-slider {
+            flex: 1;
+            height: 4px;
+            background: var(--secondary-bg);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .sensitivity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .sensitivity-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        /* Phase Space Visualization */
+        .phase-space-container {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+
+        /* Statistics Display */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .chaos-canvas-container,
+            .chaos-analysis,
+            .educational-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .demo-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .demo-controls {
+                flex-wrap: wrap;
+            }
+
+            .sensitivity-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-secondary);
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">Double Pendulum Lab</a>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Simulation</a></li>
+            <li><a href="chaos.html" class="nav-link active">Chaos Theory</a></li>
+            <li><a href="education.html" class="nav-link">Education</a></li>
+            <li><a href="analysis.html" class="nav-link">Analysis</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header fade-in">
+            <h1>Chaos Theory Demonstration</h1>
+            <p>Explore the fascinating world of chaotic dynamics through the double pendulum. Witness how tiny differences in initial conditions lead to dramatically different outcomes, revealing the essence of chaos theory and the butterfly effect.</p>
+        </div>
+
+        <!-- Butterfly Effect Demonstration -->
+        <div class="chaos-demo fade-in">
+            <div class="demo-header">
+                <h2 class="demo-title">The Butterfly Effect</h2>
+                <div class="demo-controls">
+                    <button id="start-butterfly" class="demo-btn">Start Demonstration</button>
+                    <button id="reset-butterfly" class="demo-btn">Reset</button>
+                    <button id="export-chaos" class="demo-btn">Export Data</button>
+                </div>
+            </div>
+            
+            <div class="chaos-canvas-container">
+                <div class="chaos-canvas">
+                    <div class="canvas-label">Pendulum A</div>
+                    <canvas id="chaos-canvas-1" width="100%" height="100%"></canvas>
+                </div>
+                <div class="chaos-canvas">
+                    <div class="canvas-label">Pendulum B (θ₂ + 0.001°)</div>
+                    <canvas id="chaos-canvas-2" width="100%" height="100%"></canvas>
+                </div>
+            </div>
+
+            <div class="interactive-demo">
+                <h3>Sensitivity Control</h3>
+                <div class="sensitivity-controls">
+                    <label>Initial Angle Difference:</label>
+                    <input type="range" class="sensitivity-slider" id="sensitivity-slider" 
+                           min="0.0001" max="0.1" step="0.0001" value="0.001">
+                    <span class="sensitivity-value" id="sensitivity-value">0.001°</span>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="divergence-time">0.00</div>
+                        <div class="stat-label">Divergence Time (s)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="max-separation">0.00</div>
+                        <div class="stat-label">Max Separation (m)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="lyapunov-estimate">0.00</div>
+                        <div class="stat-label">Lyapunov Exponent</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="correlation-time">0.00</div>
+                        <div class="stat-label">Correlation Time (s)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase Space Analysis -->
+        <div class="chaos-analysis fade-in">
+            <div class="analysis-card">
+                <h3>Phase Space Portrait</h3>
+                <div class="analysis-content">
+                    <div class="phase-space-container" id="phase-space-1">
+                        <canvas id="phase-canvas-1" width="100%" height="100%"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <h3>Attractor Visualization</h3>
+                <div class="analysis-content">
+                    <div class="phase-space-container" id="phase-space-2">
+                        <canvas id="phase-canvas-2" width="100%" height="100%"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational Content -->
+        <div class="educational-content fade-in">
+            <div class="content-card">
+                <h3>Understanding Chaos</h3>
+                <p><strong>Chaos theory</strong> studies the behavior of dynamical systems that are highly sensitive to initial conditions. The double pendulum is a perfect example of such a system.</p>
+                <p>Key characteristics of chaotic systems:</p>
+                <ul>
+                    <li><strong>Sensitive Dependence:</strong> Tiny changes in initial conditions lead to vastly different outcomes</li>
+                    <li><strong>Deterministic:</strong> The system follows precise mathematical rules with no random elements</li>
+                    <li><strong>Unpredictable:</strong> Long-term behavior becomes effectively impossible to predict</li>
+                    <li><strong>Complex Patterns:</strong> Despite unpredictability, patterns emerge in phase space</li>
+                </ul>
+                <p>The term "butterfly effect" was coined by meteorologist Edward Lorenz, who discovered that tiny rounding errors in weather models led to completely different forecasts.</p>
+            </div>
+            
+            <div class="content-card">
+                <h3>Mathematical Foundation</h3>
+                <p>The double pendulum's chaotic behavior arises from its nonlinear equations of motion:</p>
+                <ul>
+                    <li><strong>Lagrangian Mechanics:</strong> Energy-based formulation of the equations of motion</li>
+                    <li><strong>Nonlinear Coupling:</strong> The two pendulums interact in complex, nonlinear ways</li>
+                    <li><strong>Phase Space:</strong> The 4-dimensional space of positions and velocities</li>
+                    <li><strong>Lyapunov Exponents:</strong> Measure the rate of divergence of nearby trajectories</li>
+                </ul>
+                <p>For the double pendulum, the largest Lyapunov exponent is approximately λ ≈ 7.5 s⁻¹, meaning that small differences grow exponentially with this rate.</p>
+            </div>
+        </div>
+
+        <!-- Real-World Applications -->
+        <div class="content-card fade-in" style="margin-bottom: 3rem;">
+            <h3>Real-World Applications</h3>
+            <p>Chaos theory and the insights from double pendulum dynamics have important applications across many fields:</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 1.5rem;">
+                <div>
+                    <h4 style="color: var(--accent-color); margin-bottom: 0.5rem;">Weather Prediction</h4>
+                    <p>Atmospheric models exhibit chaotic behavior, limiting weather forecast accuracy to about 7-10 days. Small measurement errors grow exponentially, making long-term prediction impossible.</p>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-color); margin-bottom: 0.5rem;">Cryptography</h4>
+                    <p>Chaotic systems are used to generate pseudo-random numbers for encryption. The sensitivity to initial conditions makes the sequences unpredictable.</p>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-color); margin-bottom: 0.5rem;">Robotics</h4>
+                    <p>Understanding chaotic dynamics helps in designing control systems for robotic arms and legged robots that might exhibit unpredictable behaviors.</p>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-color); margin-bottom: 0.5rem;">Astronomy</h4>
+                    <p>The three-body problem in celestial mechanics shows chaotic behavior, affecting long-term predictions of planetary orbits and spacecraft trajectories.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load JavaScript Files -->
+    <script src="physics.js"></script>
+    <script src="visualization.js"></script>
+    <script src="controls.js"></script>
+    
+    <!-- Chaos-specific JavaScript -->
+    <script>
+        class ChaosDemonstration {
+            constructor() {
+                this.physics1 = new DoublePendulumPhysics();
+                this.physics2 = new DoublePendulumPhysics();
+                this.isRunning = false;
+                this.sensitivity = 0.001;
+                this.startTime = 0;
+                this.divergenceThreshold = 0.1; // meters
+                this.divergenceDetected = false;
+                this.maxSeparation = 0;
+                this.correlationTime = 0;
+                
+                this.initializeCanvases();
+                this.setupEventListeners();
+                this.resetPendulums();
+            }
+            
+            initializeCanvases() {
+                this.canvas1 = document.getElementById('chaos-canvas-1');
+                this.canvas2 = document.getElementById('chaos-canvas-2');
+                this.ctx1 = this.canvas1.getContext('2d');
+                this.ctx2 = this.canvas2.getContext('2d');
+                
+                // Set canvas sizes
+                this.canvas1.width = this.canvas1.offsetWidth;
+                this.canvas1.height = this.canvas1.offsetHeight;
+                this.canvas2.width = this.canvas2.offsetWidth;
+                this.canvas2.height = this.canvas2.offsetHeight;
+                
+                // Create visualizations
+                this.vis1 = new PendulumVisualization('chaos-canvas-1', this.canvas1.width, this.canvas1.height);
+                this.vis2 = new PendulumVisualization('chaos-canvas-2', this.canvas2.width, this.canvas2.height);
+            }
+            
+            setupEventListeners() {
+                document.getElementById('start-butterfly').addEventListener('click', () => {
+                    this.toggleDemonstration();
+                });
+                
+                document.getElementById('reset-butterfly').addEventListener('click', () => {
+                    this.resetPendulums();
+                });
+                
+                document.getElementById('export-chaos').addEventListener('click', () => {
+                    this.exportChaosData();
+                });
+                
+                document.getElementById('sensitivity-slider').addEventListener('input', (e) => {
+                    this.sensitivity = parseFloat(e.target.value);
+                    document.getElementById('sensitivity-value').textContent = this.sensitivity.toFixed(4) + '°';
+                    this.resetPendulums();
+                });
+            }
+            
+            resetPendulums() {
+                this.isRunning = false;
+                this.startTime = 0;
+                this.divergenceDetected = false;
+                this.maxSeparation = 0;
+                this.correlationTime = 0;
+                
+                // Reset both pendulums with identical initial conditions
+                const initialTheta1 = Math.PI / 2;
+                const initialTheta2 = Math.PI / 3;
+                const initialOmega1 = 0;
+                const initialOmega2 = 0;
+                
+                this.physics1.reset(initialTheta1, initialTheta2, initialOmega1, initialOmega2);
+                this.physics2.reset(
+                    initialTheta1, 
+                    initialTheta2 + (this.sensitivity * Math.PI / 180), // Tiny difference
+                    initialOmega1, 
+                    initialOmega2
+                );
+                
+                this.updateDisplays();
+                this.clearStatistics();
+            }
+            
+            toggleDemonstration() {
+                if (this.isRunning) {
+                    this.stopDemonstration();
+                } else {
+                    this.startDemonstration();
+                }
+            }
+            
+            startDemonstration() {
+                this.isRunning = true;
+                this.startTime = Date.now();
+                document.getElementById('start-butterfly').textContent = 'Stop Demonstration';
+                
+                const animate = () => {
+                    if (!this.isRunning) return;
+                    
+                    // Update physics
+                    this.physics1.rungeKuttaStep();
+                    this.physics2.rungeKuttaStep();
+                    
+                    // Calculate divergence
+                    this.calculateDivergence();
+                    
+                    // Render
+                    this.vis1.render(this.physics1);
+                    this.vis2.render(this.physics2);
+                    
+                    // Update statistics
+                    this.updateStatistics();
+                    
+                    requestAnimationFrame(animate);
+                };
+                
+                animate();
+            }
+            
+            stopDemonstration() {
+                this.isRunning = false;
+                document.getElementById('start-butterfly').textContent = 'Start Demonstration';
+            }
+            
+            calculateDivergence() {
+                const pos1 = this.physics1.getPositions().bob2;
+                const pos2 = this.physics2.getPositions().bob2;
+                
+                const dx = pos2.x - pos1.x;
+                const dy = pos2.y - pos1.y;
+                const separation = Math.sqrt(dx * dx + dy * dy);
+                
+                this.maxSeparation = Math.max(this.maxSeparation, separation);
+                
+                // Check for divergence threshold
+                if (!this.divergenceDetected && separation > this.divergenceThreshold) {
+                    this.divergenceDetected = true;
+                    this.correlationTime = (Date.now() - this.startTime) / 1000;
+                }
+            }
+            
+            updateStatistics() {
+                const currentTime = (Date.now() - this.startTime) / 1000;
+                
+                // Update divergence time
+                if (this.divergenceDetected) {
+                    document.getElementById('divergence-time').textContent = this.correlationTime.toFixed(2);
+                } else {
+                    document.getElementById('divergence-time').textContent = currentTime.toFixed(2);
+                }
+                
+                // Update max separation
+                document.getElementById('max-separation').textContent = this.maxSeparation.toFixed(3);
+                
+                // Estimate Lyapunov exponent
+                if (this.maxSeparation > 0 && currentTime > 0) {
+                    const lyapunov = Math.log(this.maxSeparation / this.sensitivity) / currentTime;
+                    document.getElementById('lyapunov-estimate').textContent = lyapunov.toFixed(2);
+                }
+                
+                // Update correlation time
+                document.getElementById('correlation-time').textContent = this.correlationTime.toFixed(2);
+            }
+            
+            clearStatistics() {
+                document.getElementById('divergence-time').textContent = '0.00';
+                document.getElementById('max-separation').textContent = '0.00';
+                document.getElementById('lyapunov-estimate').textContent = '0.00';
+                document.getElementById('correlation-time').textContent = '0.00';
+            }
+            
+            updateDisplays() {
+                this.vis1.render(this.physics1);
+                this.vis2.render(this.physics2);
+            }
+            
+            exportChaosData() {
+                const data = {
+                    metadata: {
+                        timestamp: new Date().toISOString(),
+                        sensitivity: this.sensitivity,
+                        divergenceThreshold: this.divergenceThreshold,
+                        parameters: {
+                            m1: this.physics1.m1,
+                            m2: this.physics1.m2,
+                            l1: this.physics1.l1,
+                            l2: this.physics1.l2,
+                            g: this.physics1.g
+                        }
+                    },
+                    statistics: {
+                        maxSeparation: this.maxSeparation,
+                        correlationTime: this.correlationTime,
+                        divergenceDetected: this.divergenceDetected
+                    },
+                    pendulum1: {
+                        trajectory: this.physics1.trajectory,
+                        energyHistory: this.physics1.energyHistory
+                    },
+                    pendulum2: {
+                        trajectory: this.physics2.trajectory,
+                        energyHistory: this.physics2.energyHistory
+                    }
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `chaos-analysis-${Date.now()}.json`;
+                a.click();
+                
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Initialize chaos demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            window.chaosDemo = new ChaosDemonstration();
+            
+            // Animate page elements
+            anime({
+                targets: '.fade-in',
+                opacity: [0, 1],
+                translateY: [30, 0],
+                duration: 800,
+                delay: anime.stagger(200),
+                easing: 'easeOutQuart'
+            });
+            
+            // Add hover effects to demo buttons
+            document.querySelectorAll('.demo-btn').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    anime({
+                        targets: this,
+                        scale: 1.05,
+                        duration: 200,
+                        easing: 'easeOutQuart'
+                    });
+                });
+
+                btn.addEventListener('mouseleave', function() {
+                    anime({
+                        targets: this,
+                        scale: 1,
+                        duration: 200,
+                        easing: 'easeOutQuart'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Double Pendulum - Physics Laboratory</title>
+    
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-bg: #1a1d29;
+            --secondary-bg: #2d3748;
+            --accent-color: #c17817;
+            --text-primary: #f8f6f0;
+            --text-secondary: #a0aec0;
+            --control-bg: rgba(45, 55, 72, 0.9);
+            --border-color: rgba(248, 246, 240, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 29, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+
+        #canvas3d {
+            width: 100%;
+            height: 100vh;
+            display: block;
+        }
+
+        .controls-panel {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            width: 320px;
+            background: var(--control-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            z-index: 100;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .value-display {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: var(--secondary-bg);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(193, 120, 23, 0.4);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--control-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            z-index: 100;
+            font-size: 0.85rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            color: var(--accent-color);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="DoublePend.html" class="nav-brand">3D Double Pendulum</a>
+        <ul class="nav-links">
+            <li><a href="DoublePend.html" class="nav-link">2D Simulation</a></li>
+            <li><a href="equations.html" class="nav-link">Equations</a></li>
+            <li><a href="analysis.html" class="nav-link">Analysis</a></li>
+        </ul>
+    </nav>
+
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+        <div class="control-section">
+            <h3>Physical Parameters</h3>
+            <div class="control-group">
+                <label>Mass 1: <span class="value-display" id="m1-value">1.0 kg</span></label>
+                <input type="range" id="m1" min="0.1" max="5.0" step="0.1" value="1.0">
+            </div>
+            <div class="control-group">
+                <label>Mass 2: <span class="value-display" id="m2-value">1.0 kg</span></label>
+                <input type="range" id="m2" min="0.1" max="5.0" step="0.1" value="1.0">
+            </div>
+            <div class="control-group">
+                <label>Length 1: <span class="value-display" id="l1-value">1.0 m</span></label>
+                <input type="range" id="l1" min="0.2" max="2.0" step="0.1" value="1.0">
+            </div>
+            <div class="control-group">
+                <label>Length 2: <span class="value-display" id="l2-value">1.0 m</span></label>
+                <input type="range" id="l2" min="0.2" max="2.0" step="0.1" value="1.0">
+            </div>
+            <div class="control-group">
+                <label>Gravity: <span class="value-display" id="g-value">9.81 m/s²</span></label>
+                <input type="range" id="g" min="1.0" max="20.0" step="0.1" value="9.81">
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Initial Conditions</h3>
+            <div class="control-group">
+                <label>Angle 1 (θ₁): <span class="value-display" id="theta1-value">90°</span></label>
+                <input type="range" id="theta1" min="-180" max="180" step="5" value="90">
+            </div>
+            <div class="control-group">
+                <label>Angle 2 (θ₂): <span class="value-display" id="theta2-value">90°</span></label>
+                <input type="range" id="theta2" min="-180" max="180" step="5" value="90">
+            </div>
+            <div class="control-group">
+                <label>Azimuth 1 (φ₁): <span class="value-display" id="phi1-value">0°</span></label>
+                <input type="range" id="phi1" min="-180" max="180" step="5" value="0">
+            </div>
+            <div class="control-group">
+                <label>Azimuth 2 (φ₂): <span class="value-display" id="phi2-value">0°</span></label>
+                <input type="range" id="phi2" min="-180" max="180" step="5" value="0">
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Simulation</h3>
+            <div class="control-group">
+                <label>Damping: <span class="value-display" id="damping-value">0.00</span></label>
+                <input type="range" id="damping" min="0" max="0.1" step="0.01" value="0">
+            </div>
+            <div class="control-group">
+                <label>Speed: <span class="value-display" id="speed-value">1.0×</span></label>
+                <input type="range" id="speed" min="0.1" max="2.0" step="0.1" value="1.0">
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="btn-group">
+                <button class="btn" id="play-pause">▶️ Play</button>
+                <button class="btn" id="reset">🔄 Reset</button>
+            </div>
+            <button class="btn" id="randomize">🎲 Randomize</button>
+        </div>
+
+        <div class="control-section">
+            <h3>Display</h3>
+            <button class="btn" id="toggle-trail">🎨 Trail: ON</button>
+            <button class="btn" id="toggle-grid">📐 Grid: ON</button>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel">
+        <div class="info-item">
+            <span class="info-label">Energy:</span>
+            <span class="info-value" id="energy-display">0.00 J</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Time:</span>
+            <span class="info-value" id="time-display">0.00 s</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">FPS:</span>
+            <span class="info-value" id="fps-display">60</span>
+        </div>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="canvas3d"></canvas>
+
+    <script>
+        class DoublePendulum3D {
+            constructor() {
+                // Physics parameters
+                this.g = 9.81;
+                this.m1 = 1.0;
+                this.m2 = 1.0;
+                this.l1 = 1.0;
+                this.l2 = 1.0;
+                this.damping = 0.0;
+                
+                // State variables (spherical coordinates from vertical)
+                this.theta1 = Math.PI / 2;  // Polar angle from vertical
+                this.phi1 = 0.0;           // Azimuthal angle
+                this.theta2 = Math.PI / 2;  // Polar angle for second pendulum
+                this.phi2 = 0.0;           // Azimuthal angle for second pendulum
+                
+                this.omega_theta1 = 0.0;
+                this.omega_phi1 = 0.0;
+                this.omega_theta2 = 0.0;
+                this.omega_phi2 = 0.0;
+                
+                this.time = 0.0;
+                this.timeStep = 0.005;  // Small timestep for accuracy
+                this.speed = 1.0;
+                this.isRunning = false;
+                
+                // Trail
+                this.trail = [];
+                this.maxTrailLength = 200;
+                this.showTrail = true;
+                
+                // Performance tracking
+                this.lastTime = performance.now();
+                this.frameCount = 0;
+                this.fps = 60;
+                
+                this.initThreeJS();
+                this.createPendulum();
+                this.setupControls();
+                this.animate();
+            }
+            
+            initThreeJS() {
+                // Scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x1a1d29);
+                
+                // Camera
+                this.camera = new THREE.PerspectiveCamera(
+                    60,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    1000
+                );
+                this.camera.position.set(4, 3, 4);
+                this.camera.lookAt(0, -1, 0);
+                
+                // Renderer
+                const canvas = document.getElementById('canvas3d');
+                this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.shadowMap.enabled = true;
+                
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 10, 5);
+                directionalLight.castShadow = true;
+                this.scene.add(directionalLight);
+                
+                const pointLight = new THREE.PointLight(0xc17817, 0.5);
+                pointLight.position.set(-3, 2, -3);
+                this.scene.add(pointLight);
+                
+                // Grid
+                this.grid = new THREE.GridHelper(10, 20, 0xc17817, 0x444444);
+                this.grid.position.y = -3;
+                this.scene.add(this.grid);
+                
+                // Ground plane for shadows
+                const planeGeometry = new THREE.PlaneGeometry(20, 20);
+                const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
+                this.groundPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+                this.groundPlane.rotation.x = -Math.PI / 2;
+                this.groundPlane.position.y = -3;
+                this.groundPlane.receiveShadow = true;
+                this.scene.add(this.groundPlane);
+                
+                this.setupMouseControls();
+            }
+            
+            createPendulum() {
+                // Pivot point
+                const pivotGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+                const pivotMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xffffff,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+                this.pivot = new THREE.Mesh(pivotGeometry, pivotMaterial);
+                this.pivot.position.set(0, 0, 0);
+                this.pivot.castShadow = true;
+                this.scene.add(this.pivot);
+                
+                // Rod 1
+                const rod1Geometry = new THREE.CylinderGeometry(0.02, 0.02, this.l1, 8);
+                const rodMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x888888,
+                    metalness: 0.5,
+                    roughness: 0.5
+                });
+                this.rod1 = new THREE.Mesh(rod1Geometry, rodMaterial);
+                this.rod1.castShadow = true;
+                this.scene.add(this.rod1);
+                
+                // Bob 1
+                const radius1 = 0.1 * Math.cbrt(this.m1);
+                const bob1Geometry = new THREE.SphereGeometry(radius1, 32, 32);
+                const bob1Material = new THREE.MeshStandardMaterial({ 
+                    color: 0x00d4ff,
+                    metalness: 0.3,
+                    roughness: 0.4
+                });
+                this.bob1 = new THREE.Mesh(bob1Geometry, bob1Material);
+                this.bob1.castShadow = true;
+                this.scene.add(this.bob1);
+                
+                // Rod 2
+                const rod2Geometry = new THREE.CylinderGeometry(0.02, 0.02, this.l2, 8);
+                this.rod2 = new THREE.Mesh(rod2Geometry, rodMaterial.clone());
+                this.rod2.castShadow = true;
+                this.scene.add(this.rod2);
+                
+                // Bob 2
+                const radius2 = 0.1 * Math.cbrt(this.m2);
+                const bob2Geometry = new THREE.SphereGeometry(radius2, 32, 32);
+                const bob2Material = new THREE.MeshStandardMaterial({ 
+                    color: 0xc17817,
+                    metalness: 0.3,
+                    roughness: 0.4
+                });
+                this.bob2 = new THREE.Mesh(bob2Geometry, bob2Material);
+                this.bob2.castShadow = true;
+                this.scene.add(this.bob2);
+                
+                // Trail
+                this.trailGeometry = new THREE.BufferGeometry();
+                this.trailMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0xc17817,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                this.trailLine = new THREE.Line(this.trailGeometry, this.trailMaterial);
+                this.scene.add(this.trailLine);
+            }
+            
+            setupMouseControls() {
+                this.isDragging = false;
+                this.previousMousePosition = { x: 0, y: 0 };
+                this.cameraDistance = 6;
+                this.cameraTheta = Math.PI / 4;
+                this.cameraPhi = Math.PI / 3;
+                
+                const canvas = document.getElementById('canvas3d');
+                
+                canvas.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+                
+                canvas.addEventListener('mousemove', (e) => {
+                    if (!this.isDragging) return;
+                    
+                    const deltaX = e.clientX - this.previousMousePosition.x;
+                    const deltaY = e.clientY - this.previousMousePosition.y;
+                    
+                    this.cameraTheta -= deltaX * 0.005;
+                    this.cameraPhi = Math.max(0.1, Math.min(Math.PI - 0.1, 
+                        this.cameraPhi + deltaY * 0.005));
+                    
+                    this.updateCamera();
+                    
+                    this.previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+                
+                canvas.addEventListener('mouseup', () => {
+                    this.isDragging = false;
+                });
+                
+                canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    this.cameraDistance = Math.max(2, Math.min(15, 
+                        this.cameraDistance + e.deltaY * 0.01));
+                    this.updateCamera();
+                });
+                
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+            
+            updateCamera() {
+                const x = this.cameraDistance * Math.sin(this.cameraPhi) * Math.cos(this.cameraTheta);
+                const y = this.cameraDistance * Math.cos(this.cameraPhi);
+                const z = this.cameraDistance * Math.sin(this.cameraPhi) * Math.sin(this.cameraTheta);
+                
+                this.camera.position.set(x, y, z);
+                this.camera.lookAt(0, -1, 0);
+            }
+            
+            setupControls() {
+                // Sliders
+                const sliders = ['m1', 'm2', 'l1', 'l2', 'g', 'theta1', 'phi1', 'theta2', 'phi2', 'damping', 'speed'];
+                sliders.forEach(id => {
+                    const slider = document.getElementById(id);
+                    slider.addEventListener('input', () => this.updateParameter(id, parseFloat(slider.value)));
+                });
+                
+                // Buttons
+                document.getElementById('play-pause').addEventListener('click', () => this.toggleSimulation());
+                document.getElementById('reset').addEventListener('click', () => this.reset());
+                document.getElementById('randomize').addEventListener('click', () => this.randomize());
+                document.getElementById('toggle-trail').addEventListener('click', () => this.toggleTrail());
+                document.getElementById('toggle-grid').addEventListener('click', () => this.toggleGrid());
+                
+                // Keyboard
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.toggleSimulation();
+                    } else if (e.code === 'KeyR') {
+                        this.reset();
+                    }
+                });
+            }
+            
+            updateParameter(param, value) {
+                switch(param) {
+                    case 'm1':
+                        this.m1 = value;
+                        document.getElementById('m1-value').textContent = `${value.toFixed(1)} kg`;
+                        this.updateBobSize(this.bob1, value);
+                        break;
+                    case 'm2':
+                        this.m2 = value;
+                        document.getElementById('m2-value').textContent = `${value.toFixed(1)} kg`;
+                        this.updateBobSize(this.bob2, value);
+                        break;
+                    case 'l1':
+                        this.l1 = value;
+                        document.getElementById('l1-value').textContent = `${value.toFixed(1)} m`;
+                        this.updateRodLength(this.rod1, value);
+                        break;
+                    case 'l2':
+                        this.l2 = value;
+                        document.getElementById('l2-value').textContent = `${value.toFixed(1)} m`;
+                        this.updateRodLength(this.rod2, value);
+                        break;
+                    case 'g':
+                        this.g = value;
+                        document.getElementById('g-value').textContent = `${value.toFixed(2)} m/s²`;
+                        break;
+                    case 'theta1':
+                        this.theta1 = value * Math.PI / 180;
+                        document.getElementById('theta1-value').textContent = `${value}°`;
+                        break;
+                    case 'phi1':
+                        this.phi1 = value * Math.PI / 180;
+                        document.getElementById('phi1-value').textContent = `${value}°`;
+                        break;
+                    case 'theta2':
+                        this.theta2 = value * Math.PI / 180;
+                        document.getElementById('theta2-value').textContent = `${value}°`;
+                        break;
+                    case 'phi2':
+                        this.phi2 = value * Math.PI / 180;
+                        document.getElementById('phi2-value').textContent = `${value}°`;
+                        break;
+                    case 'damping':
+                        this.damping = value;
+                        document.getElementById('damping-value').textContent = value.toFixed(2);
+                        break;
+                    case 'speed':
+                        this.speed = value;
+                        document.getElementById('speed-value').textContent = `${value.toFixed(1)}×`;
+                        break;
+                }
+            }
+            
+            updateBobSize(bob, mass) {
+                const radius = 0.1 * Math.cbrt(mass);
+                bob.geometry.dispose();
+                bob.geometry = new THREE.SphereGeometry(radius, 32, 32);
+            }
+            
+            updateRodLength(rod, length) {
+                rod.geometry.dispose();
+                rod.geometry = new THREE.CylinderGeometry(0.02, 0.02, length, 8);
+            }
+            
+            toggleSimulation() {
+                this.isRunning = !this.isRunning;
+                const btn = document.getElementById('play-pause');
+                btn.textContent = this.isRunning ? '⏸️ Pause' : '▶️ Play';
+            }
+            
+            reset() {
+                this.theta1 = Math.PI / 2;
+                this.phi1 = 0;
+                this.theta2 = Math.PI / 2;
+                this.phi2 = 0;
+                this.omega_theta1 = 0;
+                this.omega_phi1 = 0;
+                this.omega_theta2 = 0;
+                this.omega_phi2 = 0;
+                this.time = 0;
+                this.trail = [];
+                this.updateTrail();
+                
+                document.getElementById('theta1').value = 90;
+                document.getElementById('phi1').value = 0;
+                document.getElementById('theta2').value = 90;
+                document.getElementById('phi2').value = 0;
+                this.updateParameter('theta1', 90);
+                this.updateParameter('phi1', 0);
+                this.updateParameter('theta2', 90);
+                this.updateParameter('phi2', 0);
+            }
+            
+            randomize() {
+                const theta1 = -150 + Math.random() * 300;
+                const phi1 = -180 + Math.random() * 360;
+                const theta2 = -150 + Math.random() * 300;
+                const phi2 = -180 + Math.random() * 360;
+                
+                document.getElementById('theta1').value = theta1;
+                document.getElementById('phi1').value = phi1;
+                document.getElementById('theta2').value = theta2;
+                document.getElementById('phi2').value = phi2;
+                
+                this.updateParameter('theta1', theta1);
+                this.updateParameter('phi1', phi1);
+                this.updateParameter('theta2', theta2);
+                this.updateParameter('phi2', phi2);
+                
+                this.omega_theta1 = (Math.random() - 0.5) * 2;
+                this.omega_phi1 = (Math.random() - 0.5) * 2;
+                this.omega_theta2 = (Math.random() - 0.5) * 2;
+                this.omega_phi2 = (Math.random() - 0.5) * 2;
+                
+                this.trail = [];
+                this.updateTrail();
+            }
+            
+            toggleTrail() {
+                this.showTrail = !this.showTrail;
+                const btn = document.getElementById('toggle-trail');
+                btn.textContent = `🎨 Trail: ${this.showTrail ? 'ON' : 'OFF'}`;
+                this.trailLine.visible = this.showTrail;
+            }
+            
+            toggleGrid() {
+                this.grid.visible = !this.grid.visible;
+                const btn = document.getElementById('toggle-grid');
+                btn.textContent = `📐 Grid: ${this.grid.visible ? 'ON' : 'OFF'}`;
+            }
+            
+            /**
+             * Accurate 3D spherical pendulum physics using Lagrangian mechanics
+             */
+            calculateDerivatives(theta1, phi1, theta2, phi2, omega_theta1, omega_phi1, omega_theta2, omega_phi2) {
+                const sin1 = Math.sin(theta1);
+                const cos1 = Math.cos(theta1);
+                const sin2 = Math.sin(theta2);
+                const cos2 = Math.cos(theta2);
+                
+                // Prevent singularity at poles
+                const sin1_safe = Math.max(Math.abs(sin1), 0.01) * Math.sign(sin1 || 1);
+                const sin2_safe = Math.max(Math.abs(sin2), 0.01) * Math.sign(sin2 || 1);
+                
+                // First pendulum - simple spherical pendulum equations
+                // θ₁'' = sin(θ₁)cos(θ₁)φ₁'² - (g/L₁)sin(θ₁) - damping*θ₁'
+                const alpha_theta1 = sin1 * cos1 * omega_phi1 * omega_phi1 
+                                   - (this.g / this.l1) * sin1 
+                                   - this.damping * omega_theta1;
+                
+                // φ₁'' = -2(θ₁'/sin(θ₁))cos(θ₁)φ₁' - damping*φ₁'/sin²(θ₁)
+                const alpha_phi1 = -2 * (omega_theta1 / sin1_safe) * cos1 * omega_phi1
+                                  - this.damping * omega_phi1 / (sin1_safe * sin1_safe);
+                
+                // Second pendulum - coupled to first pendulum's motion
+                // Calculate position of first bob
+                const x1 = this.l1 * sin1 * Math.cos(phi1);
+                const y1 = -this.l1 * cos1;
+                const z1 = this.l1 * sin1 * Math.sin(phi1);
+                
+                // Velocity of first bob (for coupling)
+                const v1x = this.l1 * (omega_theta1 * cos1 * Math.cos(phi1) - omega_phi1 * sin1 * Math.sin(phi1));
+                const v1y = this.l1 * omega_theta1 * sin1;
+                const v1z = this.l1 * (omega_theta1 * cos1 * Math.sin(phi1) + omega_phi1 * sin1 * Math.cos(phi1));
+                
+                // Second pendulum relative to moving pivot (first bob)
+                // This is where the coupling happens - second pendulum's equations include
+                // the acceleration of its "pivot" (the first bob)
+                const accel1x = this.l1 * (
+                    alpha_theta1 * cos1 * Math.cos(phi1) 
+                    - omega_theta1 * omega_theta1 * sin1 * Math.cos(phi1)
+                    - 2 * omega_theta1 * omega_phi1 * cos1 * Math.sin(phi1)
+                    - alpha_phi1 * sin1 * Math.sin(phi1)
+                    - omega_phi1 * omega_phi1 * sin1 * Math.cos(phi1)
+                );
+                
+                const accel1y = this.l1 * (
+                    alpha_theta1 * sin1 
+                    + omega_theta1 * omega_theta1 * cos1
+                );
+                
+                const accel1z = this.l1 * (
+                    alpha_theta1 * cos1 * Math.sin(phi1)
+                    - omega_theta1 * omega_theta1 * sin1 * Math.sin(phi1)
+                    + 2 * omega_theta1 * omega_phi1 * cos1 * Math.cos(phi1)
+                    + alpha_phi1 * sin1 * Math.cos(phi1)
+                    - omega_phi1 * omega_phi1 * sin1 * Math.sin(phi1)
+                );
+                
+                // Second pendulum equations (similar to first, but with moving pivot)
+                const coupling_theta = -(accel1x * Math.cos(phi2) + accel1z * Math.sin(phi2)) / this.l2;
+                const coupling_phi = (accel1x * Math.sin(phi2) - accel1z * Math.cos(phi2)) / (this.l2 * sin2_safe);
+                
+                const alpha_theta2 = sin2 * cos2 * omega_phi2 * omega_phi2
+                                   - (this.g / this.l2) * sin2
+                                   + coupling_theta
+                                   - this.damping * omega_theta2;
+                
+                const alpha_phi2 = -2 * (omega_theta2 / sin2_safe) * cos2 * omega_phi2
+                                  + coupling_phi
+                                  - this.damping * omega_phi2 / (sin2_safe * sin2_safe);
+                
+                return {
+                    dtheta1: omega_theta1,
+                    dphi1: omega_phi1,
+                    dtheta2: omega_theta2,
+                    dphi2: omega_phi2,
+                    domega_theta1: alpha_theta1,
+                    domega_phi1: alpha_phi1,
+                    domega_theta2: alpha_theta2,
+                    domega_phi2: alpha_phi2
+                };
+            }
+            
+            /**
+             * 4th-order Runge-Kutta integration for accurate physics
+             */
+            rungeKuttaStep() {
+                const h = this.timeStep;
+                
+                // Current state
+                const state = {
+                    theta1: this.theta1,
+                    phi1: this.phi1,
+                    theta2: this.theta2,
+                    phi2: this.phi2,
+                    omega_theta1: this.omega_theta1,
+                    omega_phi1: this.omega_phi1,
+                    omega_theta2: this.omega_theta2,
+                    omega_phi2: this.omega_phi2
+                };
+                
+                // k1
+                const k1 = this.calculateDerivatives(
+                    state.theta1, state.phi1, state.theta2, state.phi2,
+                    state.omega_theta1, state.omega_phi1, state.omega_theta2, state.omega_phi2
+                );
+                
+                // k2
+                const k2 = this.calculateDerivatives(
+                    state.theta1 + 0.5 * h * k1.dtheta1,
+                    state.phi1 + 0.5 * h * k1.dphi1,
+                    state.theta2 + 0.5 * h * k1.dtheta2,
+                    state.phi2 + 0.5 * h * k1.dphi2,
+                    state.omega_theta1 + 0.5 * h * k1.domega_theta1,
+                    state.omega_phi1 + 0.5 * h * k1.domega_phi1,
+                    state.omega_theta2 + 0.5 * h * k1.domega_theta2,
+                    state.omega_phi2 + 0.5 * h * k1.domega_phi2
+                );
+                
+                // k3
+                const k3 = this.calculateDerivatives(
+                    state.theta1 + 0.5 * h * k2.dtheta1,
+                    state.phi1 + 0.5 * h * k2.dphi1,
+                    state.theta2 + 0.5 * h * k2.dtheta2,
+                    state.phi2 + 0.5 * h * k2.dphi2,
+                    state.omega_theta1 + 0.5 * h * k2.domega_theta1,
+                    state.omega_phi1 + 0.5 * h * k2.domega_phi1,
+                    state.omega_theta2 + 0.5 * h * k2.domega_theta2,
+                    state.omega_phi2 + 0.5 * h * k2.domega_phi2
+                );
+                
+                // k4
+                const k4 = this.calculateDerivatives(
+                    state.theta1 + h * k3.dtheta1,
+                    state.phi1 + h * k3.dphi1,
+                    state.theta2 + h * k3.dtheta2,
+                    state.phi2 + h * k3.dphi2,
+                    state.omega_theta1 + h * k3.domega_theta1,
+                    state.omega_phi1 + h * k3.domega_phi1,
+                    state.omega_theta2 + h * k3.domega_theta2,
+                    state.omega_phi2 + h * k3.domega_phi2
+                );
+                
+                // Update state
+                this.theta1 += h * (k1.dtheta1 + 2*k2.dtheta1 + 2*k3.dtheta1 + k4.dtheta1) / 6;
+                this.phi1 += h * (k1.dphi1 + 2*k2.dphi1 + 2*k3.dphi1 + k4.dphi1) / 6;
+                this.theta2 += h * (k1.dtheta2 + 2*k2.dtheta2 + 2*k3.dtheta2 + k4.dtheta2) / 6;
+                this.phi2 += h * (k1.dphi2 + 2*k2.dphi2 + 2*k3.dphi2 + k4.dphi2) / 6;
+                this.omega_theta1 += h * (k1.domega_theta1 + 2*k2.domega_theta1 + 2*k3.domega_theta1 + k4.domega_theta1) / 6;
+                this.omega_phi1 += h * (k1.domega_phi1 + 2*k2.domega_phi1 + 2*k3.domega_phi1 + k4.domega_phi1) / 6;
+                this.omega_theta2 += h * (k1.domega_theta2 + 2*k2.domega_theta2 + 2*k3.domega_theta2 + k4.domega_theta2) / 6;
+                this.omega_phi2 += h * (k1.domega_phi2 + 2*k2.domega_phi2 + 2*k3.domega_phi2 + k4.domega_phi2) / 6;
+                
+                this.time += h;
+            }
+            
+            calculateEnergy() {
+                // Position of first bob
+                const x1 = this.l1 * Math.sin(this.theta1) * Math.cos(this.phi1);
+                const y1 = -this.l1 * Math.cos(this.theta1);
+                const z1 = this.l1 * Math.sin(this.theta1) * Math.sin(this.phi1);
+                
+                // Velocity of first bob
+                const v1x = this.l1 * (
+                    this.omega_theta1 * Math.cos(this.theta1) * Math.cos(this.phi1)
+                    - this.omega_phi1 * Math.sin(this.theta1) * Math.sin(this.phi1)
+                );
+                const v1y = this.l1 * this.omega_theta1 * Math.sin(this.theta1);
+                const v1z = this.l1 * (
+                    this.omega_theta1 * Math.cos(this.theta1) * Math.sin(this.phi1)
+                    + this.omega_phi1 * Math.sin(this.theta1) * Math.cos(this.phi1)
+                );
+                
+                // Position of second bob
+                const x2 = x1 + this.l2 * Math.sin(this.theta2) * Math.cos(this.phi2);
+                const y2 = y1 - this.l2 * Math.cos(this.theta2);
+                const z2 = z1 + this.l2 * Math.sin(this.theta2) * Math.sin(this.phi2);
+                
+                // Velocity of second bob
+                const v2x = v1x + this.l2 * (
+                    this.omega_theta2 * Math.cos(this.theta2) * Math.cos(this.phi2)
+                    - this.omega_phi2 * Math.sin(this.theta2) * Math.sin(this.phi2)
+                );
+                const v2y = v1y + this.l2 * this.omega_theta2 * Math.sin(this.theta2);
+                const v2z = v1z + this.l2 * (
+                    this.omega_theta2 * Math.cos(this.theta2) * Math.sin(this.phi2)
+                    + this.omega_phi2 * Math.sin(this.theta2) * Math.cos(this.phi2)
+                );
+                
+                // Kinetic energy
+                const ke1 = 0.5 * this.m1 * (v1x*v1x + v1y*v1y + v1z*v1z);
+                const ke2 = 0.5 * this.m2 * (v2x*v2x + v2y*v2y + v2z*v2z);
+                
+                // Potential energy (y is negative when hanging down)
+                const pe1 = this.m1 * this.g * y1;
+                const pe2 = this.m2 * this.g * y2;
+                
+                return ke1 + ke2 + pe1 + pe2;
+            }
+            
+            updatePositions() {
+                // Position of first bob
+                const x1 = this.l1 * Math.sin(this.theta1) * Math.cos(this.phi1);
+                const y1 = -this.l1 * Math.cos(this.theta1);
+                const z1 = this.l1 * Math.sin(this.theta1) * Math.sin(this.phi1);
+                
+                this.bob1.position.set(x1, y1, z1);
+                
+                // Rod 1 - position and rotation
+                this.rod1.position.set(x1/2, y1/2, z1/2);
+                this.rod1.quaternion.setFromUnitVectors(
+                    new THREE.Vector3(0, 1, 0),
+                    new THREE.Vector3(x1, y1, z1).normalize()
+                );
+                
+                // Position of second bob
+                const x2 = x1 + this.l2 * Math.sin(this.theta2) * Math.cos(this.phi2);
+                const y2 = y1 - this.l2 * Math.cos(this.theta2);
+                const z2 = z1 + this.l2 * Math.sin(this.theta2) * Math.sin(this.phi2);
+                
+                this.bob2.position.set(x2, y2, z2);
+                
+                // Rod 2 - position and rotation
+                const rod2_midpoint = new THREE.Vector3(
+                    (x1 + x2) / 2,
+                    (y1 + y2) / 2,
+                    (z1 + z2) / 2
+                );
+                this.rod2.position.copy(rod2_midpoint);
+                
+                const rod2_direction = new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1).normalize();
+                this.rod2.quaternion.setFromUnitVectors(
+                    new THREE.Vector3(0, 1, 0),
+                    rod2_direction
+                );
+                
+                // Update trail
+                if (this.showTrail) {
+                    this.trail.push(new THREE.Vector3(x2, y2, z2));
+                    if (this.trail.length > this.maxTrailLength) {
+                        this.trail.shift();
+                    }
+                    this.updateTrail();
+                }
+            }
+            
+            updateTrail() {
+                if (this.trail.length > 1) {
+                    const positions = [];
+                    this.trail.forEach(point => {
+                        positions.push(point.x, point.y, point.z);
+                    });
+                    this.trailGeometry.setAttribute('position', 
+                        new THREE.Float32BufferAttribute(positions, 3));
+                } else {
+                    this.trailGeometry.setAttribute('position', 
+                        new THREE.Float32BufferAttribute([], 3));
+                }
+            }
+            
+            updateDisplay() {
+                const energy = this.calculateEnergy();
+                document.getElementById('energy-display').textContent = energy.toFixed(2) + ' J';
+                document.getElementById('time-display').textContent = this.time.toFixed(2) + ' s';
+                
+                // Calculate FPS
+                this.frameCount++;
+                const currentTime = performance.now();
+                if (currentTime - this.lastTime > 1000) {
+                    this.fps = Math.round(this.frameCount * 1000 / (currentTime - this.lastTime));
+                    document.getElementById('fps-display').textContent = this.fps;
+                    this.frameCount = 0;
+                    this.lastTime = currentTime;
+                }
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                if (this.isRunning) {
+                    // Multiple integration steps per frame for accuracy
+                    const stepsPerFrame = Math.ceil(this.speed);
+                    for (let i = 0; i < stepsPerFrame; i++) {
+                        this.rungeKuttaStep();
+                    }
+                }
+                
+                this.updatePositions();
+                this.updateDisplay();
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        
+        // Initialize simulation
+        const pendulum = new DoublePendulum3D();
+    </script>
+</body>
+</html>

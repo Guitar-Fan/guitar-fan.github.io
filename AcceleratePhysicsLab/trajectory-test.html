@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Trajectory Canvas Test</title>
+    <style>
+        body {
+            background: #0a0e1a;
+            color: white;
+            font-family: monospace;
+            padding: 20px;
+        }
+        #trajectory-canvas {
+            border: 2px solid #00d4ff;
+            background: rgba(0, 0, 0, 0.5);
+            display: block;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background: #00d4ff;
+            color: black;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>2D Trajectory Canvas Test</h1>
+    <canvas id="trajectory-canvas" width="636" height="400"></canvas>
+    <div>
+        <button onclick="drawGrid()">Draw Grid</button>
+        <button onclick="drawTrajectory()">Draw Trajectory</button>
+        <button onclick="clearCanvas()">Clear</button>
+    </div>
+    <div id="log"></div>
+    
+    <script>
+        function log(msg) {
+            console.log(msg);
+            document.getElementById('log').innerHTML += msg + '<br>';
+        }
+        
+        const canvas = document.getElementById('trajectory-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        log('✅ Canvas found: ' + (canvas ? 'YES' : 'NO'));
+        log('📐 Canvas size: ' + canvas.width + 'x' + canvas.height);
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            log('🧹 Canvas cleared');
+        }
+        
+        function drawGrid() {
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear
+            ctx.clearRect(0, 0, width, height);
+            
+            // Background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            
+            const maxDistance = 300;
+            const scale = width / maxDistance;
+            
+            for (let d = 0; d <= maxDistance; d += 50) {
+                const x = d * scale;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = '12px monospace';
+                ctx.fillText(d + 'm', x + 2, height - 5);
+            }
+            
+            const maxHeight = 50;
+            const heightScale = height / maxHeight;
+            
+            for (let h = 0; h <= maxHeight; h += 10) {
+                const y = height - (h * heightScale);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = '12px monospace';
+                ctx.fillText(h + 'm', 2, y - 2);
+            }
+            
+            // Ground
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+            ctx.lineTo(width, height);
+            ctx.stroke();
+            
+            log('✅ Grid drawn successfully');
+        }
+        
+        function drawTrajectory() {
+            drawGrid();
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const maxDistance = 300;
+            const maxHeight = 50;
+            
+            // Simulate realistic golf ball trajectory
+            const trail = [];
+            const v0 = 50; // initial velocity m/s
+            const angle = 15 * Math.PI / 180; // 15 degree launch
+            const g = 9.81;
+            
+            for (let t = 0; t < 5; t += 0.05) {
+                const x = v0 * Math.cos(angle) * t;
+                const y = v0 * Math.sin(angle) * t - 0.5 * g * t * t;
+                if (y < 0) break;
+                trail.push({ x, y, z: 0 });
+            }
+            
+            // Draw trajectory
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            trail.forEach((point, index) => {
+                const px = (point.x / maxDistance) * width;
+                const py = height - ((point.y / maxHeight) * height);
+                
+                if (index === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            });
+            ctx.stroke();
+            
+            // Draw ball at end
+            const lastPoint = trail[trail.length - 1];
+            const ballX = (lastPoint.x / maxDistance) * width;
+            const ballY = height - ((lastPoint.y / maxHeight) * height);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            log('⚪ Trajectory drawn with ' + trail.length + ' points');
+            log('📊 Max distance: ' + lastPoint.x.toFixed(1) + 'm');
+        }
+        
+        // Draw grid on load
+        drawGrid();
+    </script>
+</body>
+</html>

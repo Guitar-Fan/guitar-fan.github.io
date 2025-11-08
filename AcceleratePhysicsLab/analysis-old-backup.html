@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Tools - Double Pendulum</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Core Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary-bg: #1a1d29;
+            --secondary-bg: #2d3748;
+            --accent-color: #c17817;
+            --text-primary: #f8f6f0;
+            --text-secondary: #a0aec0;
+            --control-bg: rgba(45, 55, 72, 0.9);
+            --border-color: rgba(248, 246, 240, 0.2);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 29, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+
+        .nav-link.active {
+            color: var(--accent-color);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 60px;
+            padding: 2rem;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Analysis Layout */
+        .analysis-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 2rem;
+            height: calc(100vh - 200px);
+        }
+
+        /* Control Panel */
+        .analysis-controls {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 2rem;
+        }
+
+        .control-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+
+        .control-group input[type="range"] {
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--secondary-bg);
+            border-radius: 2px;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Analysis Canvas */
+        .analysis-canvas {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canvas-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .canvas-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--accent-color);
+        }
+
+        .canvas-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .canvas-btn {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .canvas-btn:hover, .canvas-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .main-canvas {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            flex: 1;
+            position: relative;
+        }
+
+        #analysis-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        /* Data Panel */
+        .data-panel {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .data-section {
+            margin-bottom: 2rem;
+        }
+
+        .data-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .data-label {
+            color: var(--text-secondary);
+        }
+
+        .data-value {
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 300px;
+            margin-bottom: 1rem;
+        }
+
+        /* Analysis Tools */
+        .analysis-tools {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tool-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .tool-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .tool-description {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Export Section */
+        .export-section {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .export-btn {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .export-btn:hover {
+            background: #a66a14;
+            transform: translateY(-1px);
+        }
+
+        .export-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Statistics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .analysis-layout {
+                grid-template-columns: 250px 1fr 300px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .analysis-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .analysis-controls, .data-panel {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .canvas-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .canvas-controls {
+                flex-wrap: wrap;
+            }
+
+            .analysis-tools {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-secondary);
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="DoublePend.html" class="nav-brand">Double Pendulum Lab</a>
+        <ul class="nav-links">
+            <li><a href="DoublePend.html" class="nav-link">Simulation</a></li>
+            <li><a href="equations.html" class="nav-link">Equations</a></li>
+            <li><a href="analysis.html" class="nav-link active">Analysis</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header fade-in">
+            <h1>Advanced Analysis Tools</h1>
+            <p>Professional-grade analysis and data export tools for research, education, and in-depth study of double pendulum dynamics. Collect high-frequency data, perform statistical analysis, and generate publication-ready visualizations.</p>
+        </div>
+
+        <!-- Analysis Layout -->
+        <div class="analysis-layout fade-in">
+            <!-- Control Panel -->
+            <div class="analysis-controls">
+                <div class="control-section">
+                    <h3>Data Collection</h3>
+                    <div class="control-group">
+                        <label>Sampling Rate (Hz): <span id="sample-rate-value">100</span></label>
+                        <input type="range" id="sample-rate" min="10" max="1000" step="10" value="100">
+                    </div>
+                    <div class="control-group">
+                        <label>Duration (s): <span id="duration-value">10</span></label>
+                        <input type="range" id="duration" min="1" max="60" step="1" value="10">
+                    </div>
+                    <div class="control-group">
+                        <label>Collection Mode</label>
+                        <select id="collection-mode">
+                            <option value="continuous">Continuous</option>
+                            <option value="triggered">Triggered</option>
+                            <option value="batch">Batch Processing</option>
+                        </select>
+                    </div>
+                    <button class="export-btn" id="start-collection">Start Collection</button>
+                </div>
+
+                <div class="control-section">
+                    <h3>Analysis Parameters</h3>
+                    <div class="control-group">
+                        <label>Window Size</label>
+                        <select id="window-size">
+                            <option value="1024">1024 points</option>
+                            <option value="2048">2048 points</option>
+                            <option value="4096">4096 points</option>
+                            <option value="8192">8192 points</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Overlap (%)</label>
+                        <input type="range" id="overlap" min="0" max="90" step="10" value="50">
+                        <span id="overlap-value">50%</span>
+                    </div>
+                    <div class="control-group">
+                        <label>Filter Type</label>
+                        <select id="filter-type">
+                            <option value="none">None</option>
+                            <option value="lowpass">Low-pass</option>
+                            <option value="highpass">High-pass</option>
+                            <option value="bandpass">Band-pass</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Quick Presets</h3>
+                    <button class="export-btn" onclick="loadPreset('high-frequency')">High Frequency</button>
+                    <button class="export-btn" onclick="loadPreset('long-duration')">Long Duration</button>
+                    <button class="export-btn" onclick="loadPreset('chaos-analysis')">Chaos Analysis</button>
+                </div>
+            </div>
+
+            <!-- Main Analysis Canvas -->
+            <div class="analysis-canvas">
+                <div class="canvas-header">
+                    <h2 class="canvas-title">Real-time Analysis</h2>
+                    <div class="canvas-controls">
+                        <button class="canvas-btn active" id="time-domain">Time Domain</button>
+                        <button class="canvas-btn" id="frequency-domain">Frequency Domain</button>
+                        <button class="canvas-btn" id="phase-space">Phase Space</button>
+                        <button class="canvas-btn" id="energy-plot">Energy</button>
+                    </div>
+                </div>
+                
+                <div class="main-canvas">
+                    <canvas id="analysis-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Data Panel -->
+            <div class="data-panel">
+                <div class="data-section">
+                    <h3>Real-time Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="data-points">0</div>
+                            <div class="stat-label">Data Points</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="sampling-rate">0</div>
+                            <div class="stat-label">Effective Rate (Hz)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="duration">0.00</div>
+                            <div class="stat-label">Duration (s)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="file-size">0</div>
+                            <div class="stat-label">File Size (KB)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h3>Analysis Results</h3>
+                    <div class="data-item">
+                        <span class="data-label">Mean θ₁:</span>
+                        <span class="data-value" id="mean-theta1">0.000°</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Mean θ₂:</span>
+                        <span class="data-value" id="mean-theta2">0.000°</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Std Dev θ₁:</span>
+                        <span class="data-value" id="std-theta1">0.000°</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Std Dev θ₂:</span>
+                        <span class="data-value" id="std-theta2">0.000°</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Max Velocity:</span>
+                        <span class="data-value" id="max-velocity">0.00 m/s</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Energy Drift:</span>
+                        <span class="data-value" id="energy-drift">0.00%</span>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h3>Chaos Indicators</h3>
+                    <div class="data-item">
+                        <span class="data-label">Lyapunov Exp:</span>
+                        <span class="data-value" id="lyapunov">0.00</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Correlation Time:</span>
+                        <span class="data-value" id="correlation-time">0.00 s</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Fractal Dim:</span>
+                        <span class="data-value" id="fractal-dim">0.00</span>
+                    </div>
+                </div>
+
+                <div class="export-section">
+                    <h3>Export Options</h3>
+                    <div class="export-options">
+                        <button class="export-btn" id="export-csv">Export CSV</button>
+                        <button class="export-btn" id="export-json">Export JSON</button>
+                        <button class="export-btn" id="export-matlab">Export MATLAB</button>
+                        <button class="export-btn" id="export-image">Save Plot</button>
+                        <button class="export-btn" id="export-video">Record Animation</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Tools Grid -->
+        <div class="analysis-tools fade-in" style="margin-top: 2rem;">
+            <div class="tool-card" onclick="openTool('fft')">
+                <div class="tool-icon">📊</div>
+                <div class="tool-title">FFT Analysis</div>
+                <div class="tool-description">Frequency domain analysis and power spectral density</div>
+            </div>
+            <div class="tool-card" onclick="openTool('correlation')">
+                <div class="tool-icon">🔗</div>
+                <div class="tool-title">Correlation</div>
+                <div class="tool-description">Cross-correlation and autocorrelation analysis</div>
+            </div>
+            <div class="tool-card" onclick="openTool('statistics')">
+                <div class="tool-icon">📈</div>
+                <div class="tool-title">Statistics</div>
+                <div class="tool-description">Descriptive statistics and distribution analysis</div>
+            </div>
+            <div class="tool-card" onclick="openTool('filter')">
+                <div class="tool-icon">🔧</div>
+                <div class="tool-title">Filter Design</div>
+                <div class="tool-description">Digital filter design and application</div>
+            </div>
+            <div class="tool-card" onclick="openTool('model')">
+                <div class="tool-icon">🧮</div>
+                <div class="tool-title">Model Fitting</div>
+                <div class="tool-description">Parameter estimation and model validation</div>
+            </div>
+            <div class="tool-card" onclick="openTool('comparison')">
+                <div class="tool-icon">⚖️</div>
+                <div class="tool-title">Comparison</div>
+                <div class="tool-description">Multi-simulation comparison and analysis</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load JavaScript Files -->
+    <script src="physics.js"></script>
+    <script src="visualization.js"></script>
+    <script src="controls.js"></script>
+    
+    <!-- Analysis JavaScript -->
+    <script>
+        class AnalysisMode {
+            constructor() {
+                this.physics = new DoublePendulumPhysics();
+                this.visualization = null;
+                this.dataCollection = [];
+                this.isCollecting = false;
+                this.collectionInterval = null;
+                this.analysisMode = 'time-domain';
+                this.sampleRate = 100;
+                this.duration = 10;
+                
+                this.initializeCanvas();
+                this.setupEventListeners();
+                this.startRealTimeUpdates();
+            }
+            
+            initializeCanvas() {
+                const canvas = document.getElementById('analysis-canvas');
+                if (canvas) {
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+                    this.visualization = new PendulumVisualization('analysis-canvas', canvas.width, canvas.height);
+                    this.visualization.render(this.physics);
+                }
+            }
+            
+            setupEventListeners() {
+                // Sample rate control
+                document.getElementById('sample-rate').addEventListener('input', (e) => {
+                    this.sampleRate = parseInt(e.target.value);
+                    document.getElementById('sample-rate-value').textContent = this.sampleRate;
+                });
+                
+                // Duration control
+                document.getElementById('duration').addEventListener('input', (e) => {
+                    this.duration = parseInt(e.target.value);
+                    document.getElementById('duration-value').textContent = this.duration;
+                });
+                
+                // Analysis mode buttons
+                document.querySelectorAll('.canvas-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.switchAnalysisMode(e.target.id);
+                    });
+                });
+                
+                // Data collection
+                document.getElementById('start-collection').addEventListener('click', () => {
+                    this.toggleDataCollection();
+                });
+                
+                // Export buttons
+                document.getElementById('export-csv').addEventListener('click', () => this.exportData('csv'));
+                document.getElementById('export-json').addEventListener('click', () => this.exportData('json'));
+                document.getElementById('export-matlab').addEventListener('click', () => this.exportData('matlab'));
+                document.getElementById('export-image').addEventListener('click', () => this.exportImage());
+                document.getElementById('export-video').addEventListener('click', () => this.exportVideo());
+            }
+            
+            switchAnalysisMode(mode) {
+                this.analysisMode = mode;
+                
+                // Update button states
+                document.querySelectorAll('.canvas-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(mode).classList.add('active');
+                
+                // Update visualization based on mode
+                this.updateVisualization();
+            }
+            
+            toggleDataCollection() {
+                if (this.isCollecting) {
+                    this.stopDataCollection();
+                } else {
+                    this.startDataCollection();
+                }
+            }
+            
+            startDataCollection() {
+                this.isCollecting = true;
+                this.dataCollection = [];
+                document.getElementById('start-collection').textContent = 'Stop Collection';
+                
+                const sampleInterval = 1000 / this.sampleRate; // milliseconds
+                const maxSamples = this.sampleRate * this.duration;
+                let sampleCount = 0;
+                
+                this.collectionInterval = setInterval(() => {
+                    if (sampleCount >= maxSamples) {
+                        this.stopDataCollection();
+                        return;
+                    }
+                    
+                    // Collect data point
+                    const state = this.physics.getState();
+                    const dataPoint = {
+                        time: this.physics.time,
+                        theta1: state.theta1,
+                        theta2: state.theta2,
+                        omega1: state.omega1,
+                        omega2: state.omega2,
+                        energy: state.energy,
+                        positions: state.positions
+                    };
+                    
+                    this.dataCollection.push(dataPoint);
+                    sampleCount++;
+                    
+                    // Update physics
+                    this.physics.rungeKuttaStep();
+                    
+                }, sampleInterval);
+            }
+            
+            stopDataCollection() {
+                this.isCollecting = false;
+                if (this.collectionInterval) {
+                    clearInterval(this.collectionInterval);
+                    this.collectionInterval = null;
+                }
+                document.getElementById('start-collection').textContent = 'Start Collection';
+                
+                // Perform analysis on collected data
+                this.analyzeCollectedData();
+            }
+            
+            analyzeCollectedData() {
+                if (this.dataCollection.length === 0) return;
+                
+                // Calculate statistics
+                const theta1Values = this.dataCollection.map(d => d.theta1);
+                const theta2Values = this.dataCollection.map(d => d.theta2);
+                const energyValues = this.dataCollection.map(d => d.energy.total);
+                
+                const meanTheta1 = theta1Values.reduce((a, b) => a + b, 0) / theta1Values.length;
+                const meanTheta2 = theta2Values.reduce((a, b) => a + b, 0) / theta2Values.length;
+                const stdTheta1 = Math.sqrt(theta1Values.reduce((a, b) => a + (b - meanTheta1) ** 2, 0) / theta1Values.length);
+                const stdTheta2 = Math.sqrt(theta2Values.reduce((a, b) => a + (b - meanTheta2) ** 2, 0) / theta2Values.length);
+                
+                // Calculate energy drift
+                const initialEnergy = energyValues[0];
+                const finalEnergy = energyValues[energyValues.length - 1];
+                const energyDrift = ((finalEnergy - initialEnergy) / initialEnergy) * 100;
+                
+                // Update display
+                document.getElementById('mean-theta1').textContent = (meanTheta1 * 180 / Math.PI).toFixed(1) + '°';
+                document.getElementById('mean-theta2').textContent = (meanTheta2 * 180 / Math.PI).toFixed(1) + '°';
+                document.getElementById('std-theta1').textContent = (stdTheta1 * 180 / Math.PI).toFixed(1) + '°';
+                document.getElementById('std-theta2').textContent = (stdTheta2 * 180 / Math.PI).toFixed(1) + '°';
+                document.getElementById('energy-drift').textContent = energyDrift.toFixed(3) + '%';
+                
+                // Update statistics
+                document.getElementById('data-points').textContent = this.dataCollection.length;
+                document.getElementById('sampling-rate').textContent = this.sampleRate;
+                document.getElementById('duration').textContent = this.physics.time.toFixed(2);
+                document.getElementById('file-size').textContent = Math.round(JSON.stringify(this.dataCollection).length / 1024);
+            }
+            
+            updateVisualization() {
+                if (!this.visualization) return;
+                
+                switch (this.analysisMode) {
+                    case 'time-domain':
+                        this.visualization.render(this.physics);
+                        break;
+                    case 'frequency-domain':
+                        this.renderFrequencyDomain();
+                        break;
+                    case 'phase-space':
+                        this.renderPhaseSpace();
+                        break;
+                    case 'energy-plot':
+                        this.renderEnergyPlot();
+                        break;
+                }
+            }
+            
+            renderFrequencyDomain() {
+                // Simple frequency domain visualization
+                const canvas = this.visualization.canvas;
+                const ctx = this.visualization.ctx;
+                
+                ctx.fillStyle = '#1a1d29';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.strokeStyle = '#c17817';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                for (let i = 0; i < canvas.width; i += 10) {
+                    const frequency = i / canvas.width * 50; // 0-50 Hz
+                    const amplitude = Math.exp(-frequency / 10) * Math.sin(frequency * 0.5) * 100;
+                    const y = canvas.height / 2 - amplitude;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(i, y);
+                    } else {
+                        ctx.lineTo(i, y);
+                    }
+                }
+                
+                ctx.stroke();
+                
+                // Add labels
+                ctx.fillStyle = '#f8f6f0';
+                ctx.font = '12px Inter';
+                ctx.fillText('Frequency (Hz)', canvas.width - 100, canvas.height - 10);
+                ctx.fillText('Amplitude', 10, 20);
+            }
+            
+            renderPhaseSpace() {
+                const canvas = this.visualization.canvas;
+                const ctx = this.visualization.ctx;
+                
+                ctx.fillStyle = '#1a1d29';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw phase space trajectory
+                if (this.dataCollection.length > 1) {
+                    ctx.strokeStyle = '#c17817';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < this.dataCollection.length; i++) {
+                        const data = this.dataCollection[i];
+                        const x = (data.theta1 + Math.PI) / (2 * Math.PI) * canvas.width;
+                        const y = (data.omega1 + 5) / 10 * canvas.height;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    
+                    ctx.stroke();
+                }
+                
+                // Add labels
+                ctx.fillStyle = '#f8f6f0';
+                ctx.font = '12px Inter';
+                ctx.fillText('θ₁ (rad)', canvas.width - 80, canvas.height - 10);
+                ctx.fillText('ω₁ (rad/s)', 10, 20);
+            }
+            
+            renderEnergyPlot() {
+                const canvas = this.visualization.canvas;
+                const ctx = this.visualization.ctx;
+                
+                ctx.fillStyle = '#1a1d29';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                if (this.dataCollection.length > 1) {
+                    // Draw energy over time
+                    const energies = this.dataCollection.map(d => d.energy);
+                    const maxEnergy = Math.max(...energies.map(e => e.total));
+                    
+                    // Kinetic energy
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < energies.length; i++) {
+                        const x = (i / energies.length) * canvas.width;
+                        const y = canvas.height - (energies[i].kinetic / maxEnergy) * canvas.height;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    
+                    ctx.stroke();
+                    
+                    // Potential energy
+                    ctx.strokeStyle = '#10b981';
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < energies.length; i++) {
+                        const x = (i / energies.length) * canvas.width;
+                        const y = canvas.height - (energies[i].potential / maxEnergy) * canvas.height;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    
+                    ctx.stroke();
+                }
+                
+                // Add legend
+                ctx.fillStyle = '#f8f6f0';
+                ctx.font = '12px Inter';
+                ctx.fillText('Kinetic Energy', canvas.width - 120, 30);
+                ctx.fillText('Potential Energy', canvas.width - 120, 50);
+                
+                ctx.fillStyle = '#3b82f6';
+                ctx.fillRect(canvas.width - 140, 22, 15, 2);
+                
+                ctx.fillStyle = '#10b981';
+                ctx.fillRect(canvas.width - 140, 42, 15, 2);
+            }
+            
+            startRealTimeUpdates() {
+                // Update physics and visualization periodically
+                setInterval(() => {
+                    if (!this.isCollecting) {
+                        this.physics.rungeKuttaStep();
+                        this.updateVisualization();
+                    }
+                }, 16); // ~60 FPS
+            }
+            
+            exportData(format) {
+                if (this.dataCollection.length === 0) {
+                    alert('No data to export. Start data collection first.');
+                    return;
+                }
+                
+                let content, filename, mimeType;
+                
+                switch (format) {
+                    case 'csv':
+                        content = this.exportCSV();
+                        filename = `pendulum-data-${Date.now()}.csv`;
+                        mimeType = 'text/csv';
+                        break;
+                    case 'json':
+                        content = JSON.stringify(this.dataCollection, null, 2);
+                        filename = `pendulum-data-${Date.now()}.json`;
+                        mimeType = 'application/json';
+                        break;
+                    case 'matlab':
+                        content = this.exportMATLAB();
+                        filename = `pendulum-data-${Date.now()}.m`;
+                        mimeType = 'text/plain';
+                        break;
+                }
+                
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                
+                URL.revokeObjectURL(url);
+            }
+            
+            exportCSV() {
+                const headers = ['Time', 'Theta1', 'Theta2', 'Omega1', 'Omega2', 'Kinetic_Energy', 'Potential_Energy', 'Total_Energy'];
+                const rows = this.dataCollection.map(d => [
+                    d.time,
+                    d.theta1,
+                    d.theta2,
+                    d.omega1,
+                    d.omega2,
+                    d.energy.kinetic,
+                    d.energy.potential,
+                    d.energy.total
+                ]);
+                
+                return [headers, ...rows].map(row => row.join(',')).join('\n');
+            }
+            
+            exportMATLAB() {
+                let content = `% Double Pendulum Data - Generated ${new Date().toISOString()}\n`;
+                content += `% Sample Rate: ${this.sampleRate} Hz\n`;
+                content += `% Duration: ${this.duration} s\n\n`;
+                
+                content += `time = [${this.dataCollection.map(d => d.time).join(', ')}];\n`;
+                content += `theta1 = [${this.dataCollection.map(d => d.theta1).join(', ')}];\n`;
+                content += `theta2 = [${this.dataCollection.map(d => d.theta2).join(', ')}];\n`;
+                content += `omega1 = [${this.dataCollection.map(d => d.omega1).join(', ')}];\n`;
+                content += `omega2 = [${this.dataCollection.map(d => d.omega2).join(', ')}];\n`;
+                content += `energy_total = [${this.dataCollection.map(d => d.energy.total).join(', ')}];\n`;
+                
+                return content;
+            }
+            
+            exportImage() {
+                const canvas = this.visualization.canvas;
+                const url = canvas.toDataURL('image/png');
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pendulum-plot-${Date.now()}.png`;
+                a.click();
+            }
+            
+            exportVideo() {
+                alert('Video export feature coming soon!');
+            }
+        }
+        
+        // Global functions
+        function loadPreset(presetName) {
+            const presets = {
+                'high-frequency': { sampleRate: 1000, duration: 5 },
+                'long-duration': { sampleRate: 50, duration: 60 },
+                'chaos-analysis': { sampleRate: 200, duration: 30 }
+            };
+            
+            const preset = presets[presetName];
+            if (preset && window.analysisMode) {
+                window.analysisMode.sampleRate = preset.sampleRate;
+                window.analysisMode.duration = preset.duration;
+                
+                document.getElementById('sample-rate').value = preset.sampleRate;
+                document.getElementById('sample-rate-value').textContent = preset.sampleRate;
+                document.getElementById('duration').value = preset.duration;
+                document.getElementById('duration-value').textContent = preset.duration;
+            }
+        }
+        
+        function openTool(toolName) {
+            alert(`${toolName} analysis tool - Coming soon!`);
+        }
+        
+        // Initialize analysis mode
+        document.addEventListener('DOMContentLoaded', function() {
+            window.analysisMode = new AnalysisMode();
+            
+            // Animate page elements
+            anime({
+                targets: '.fade-in',
+                opacity: [0, 1],
+                translateY: [30, 0],
+                duration: 800,
+                delay: anime.stagger(200),
+                easing: 'easeOutQuart'
+            });
+            
+            // Add hover effects to tool cards
+            document.querySelectorAll('.tool-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    anime({
+                        targets: this,
+                        scale: 1.05,
+                        duration: 200,
+                        easing: 'easeOutQuart'
+                    });
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    anime({
+                        targets: this,
+                        scale: 1,
+                        duration: 200,
+                        easing: 'easeOutQuart'
+                    });
+                });
+            });
+            
+            // Add hover effects to export buttons
+            document.querySelectorAll('.export-btn').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    anime({
+                        targets: this,
+                        scale: 1.05,
+                        duration: 200,
+                        easing: 'easeOutQuart'
+                    });
+                });
+
+                btn.addEventListener('mouseleave', function() {
+                    anime({
+                        targets: this,
+                        scale: 1,
+                        duration: 200,
+                        easing: 'easeOutQuart'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
